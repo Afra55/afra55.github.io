@@ -49,70 +49,28 @@
     return promise;
   }
 
-  function loadStylesheet(id, href) {
-    const existing = [...document.querySelectorAll("link[data-panel-css]")].find(
+  function injectStylesheet(id, href) {
+    if ([...document.querySelectorAll("link[data-panel-css]")].some(
       (l) => l.dataset.panelCss === id || l.href === href || l.getAttribute("href") === href
-    );
-    if (existing) {
+    )) {
       cssLoaded.add(id);
-      return Promise.resolve();
+      return;
     }
-    return new Promise((resolve) => {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = href;
-      link.dataset.panelCss = id;
-      let settled = false;
-      const done = () => {
-        if (settled) return;
-        settled = true;
-        cssLoaded.add(id);
-        resolve();
-      };
-      link.addEventListener("load", done);
-      link.addEventListener("error", done);
-      document.head.appendChild(link);
-      // 兜底：避免个别环境不触发 load
-      window.setTimeout(done, 2000);
-    });
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    link.dataset.panelCss = id;
+    document.head.appendChild(link);
+    cssLoaded.add(id);
   }
 
   function ensurePanelCss(toolId) {
     const id = String(toolId || "").trim();
-    if (!id || cssLoaded.has(id)) return Promise.resolve();
-    if (inflight.has(`css:${id}`)) return inflight.get(`css:${id}`);
-
-    const href = withVersion(`./styles/panels/${id}.css`);
-    const existing = [...document.querySelectorAll("link[data-panel-css]")].find(
-      (l) => l.href === href || l.getAttribute("href") === href || l.dataset.panelCss === id
-    );
-    if (existing) {
-      cssLoaded.add(id);
-      return Promise.resolve();
+    if (!id || cssLoaded.has(id)) return;
+    if (/earn$/.test(id)) {
+      injectStylesheet("kidsflash-shared", withVersion("./styles/panels/kidsflash.css"));
     }
-
-    const promise = (async () => {
-      // 认物闪卡面板 CSS 多为 @import kidsflash；WebKit 上 link.onload 可能早于 @import 完成
-      if (/earn$/.test(id)) {
-        const sharedId = "kidsflash-shared";
-        if (!cssLoaded.has(sharedId)) {
-          await loadStylesheet(sharedId, withVersion("./styles/panels/kidsflash.css"));
-        }
-      }
-      try {
-        const res = await fetch(withVersion(`./styles/panels/${id}.css`), fetchInit({ method: "HEAD" }));
-        if (!res.ok) {
-          cssLoaded.add(id);
-          return;
-        }
-      } catch (_) {
-        cssLoaded.add(id);
-        return;
-      }
-      await loadStylesheet(id, href);
-    })().finally(() => inflight.delete(`css:${id}`));
-    inflight.set(`css:${id}`, promise);
-    return promise;
+    injectStylesheet(id, withVersion(`./styles/panels/${id}.css`));
   }
 
   function mountPanel(toolId, html) {
@@ -146,12 +104,12 @@
   async function ensure(toolId) {
     const id = String(toolId || "").trim();
     if (!id) return null;
+    ensurePanelCss(id);
     if (mounted.has(id)) {
-      await ensurePanelCss(id);
       notifyExtraBind(id);
       return document.getElementById(id);
     }
-    const [html] = await Promise.all([loadPanelHtml(id), ensurePanelCss(id)]);
+    const html = await loadPanelHtml(id);
     return mountPanel(id, html);
   }
 
