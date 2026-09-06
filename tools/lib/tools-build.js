@@ -1,7 +1,7 @@
 (() => {
   "use strict";
   /** 全站构建版本（北京时间后缀）。每次合入功能/修复必须递增此号，并运行 node tools/bump-version.cjs 同步 ?v=。 */
-  const BUILD = "2026.09.06-075000";
+  const BUILD = "2026.09.06-081600";
   window.TOOLS_BUILD = BUILD;
   window.TOOLS_VERSION = BUILD;
 
@@ -54,7 +54,6 @@
     }
   } catch (_) {}
 
-  // iOS PWA：不透明状态栏 + 顶部/抽屉让出刘海。不改桌面。
   try {
     const bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
     if (bar) bar.setAttribute("content", "black");
