@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const BUILD = "2026.09.06-081800";
+  const BUILD = "2026.09.06-082700";
   window.TOOLS_BUILD = BUILD;
   window.TOOLS_VERSION = BUILD;
 
@@ -14,9 +14,7 @@
     document.addEventListener("DOMContentLoaded", paintVersion, { once: true });
   } else paintVersion();
 
-  try {
-    localStorage.setItem("devtools-seen-build-v1", BUILD);
-  } catch (_) {}
+  try { localStorage.setItem("devtools-seen-build-v1", BUILD); } catch (_) {}
 
   try {
     const synth = window.speechSynthesis;
@@ -40,18 +38,6 @@
     const bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
     if (bar) bar.setAttribute("content", "black");
   } catch (_) {}
-  if (!document.getElementById("devtools-ios-safe")) {
-    const st = document.createElement("style");
-    st.id = "devtools-ios-safe";
-    st.textContent =
-      "@supports (padding-top: env(safe-area-inset-top)){" +
-      "@media (max-width: 900px){" +
-      "body{padding-top:env(safe-area-inset-top,0px);}" +
-      ".site-header{padding-top:0.85rem;}" +
-      ".nav-bar,.nav-bar.is-collapsed{padding-top:env(safe-area-inset-top,0px)!important;padding-left:0.85rem!important;padding-right:0.85rem!important;}" +
-      ".nav-drawer-head{padding-top:0.35rem;}}}";
-    document.head.appendChild(st);
-  }
 
   try {
     if (!document.querySelector("script[data-kidsflash-nav]")) {
