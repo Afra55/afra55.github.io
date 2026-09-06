@@ -27,6 +27,7 @@
 
   function patchRoot(root) {
     if (!root || root.dataset.navV2 === "1") return;
+    if (root.dataset.kidsflashBound !== "1") return;
     root.dataset.navV2 = "1";
     const speak = root.querySelector('[id$="-speak"]');
     const next = root.querySelector('[id$="-next"]');
@@ -68,10 +69,8 @@
     document.querySelectorAll(".kidsflash-immerse").forEach(patchRoot);
   }
 
-  window.addEventListener("devtools:panel-mounted", scan);
-  window.addEventListener("devtools:route", scan);
+  window.addEventListener("devtools:panel-mounted", () => setTimeout(scan, 0));
+  window.addEventListener("devtools:route", () => setTimeout(scan, 0));
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", scan);
-  else scan();
-  window.setTimeout(scan, 300);
-  window.setTimeout(scan, 1200);
+  [0, 200, 600, 1500, 3000].forEach((ms) => setTimeout(scan, ms));
 })();
