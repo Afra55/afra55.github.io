@@ -3,12 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-  <meta name="description" content="实用小工具合集" />
+  <meta name="description" content="实用小工具：时间戳、倒计时、日期提醒、颜色、Base64、JSON、正则、URL、UUID、Hash、文本、命名转换、坐标系互转、图片压缩裁剪水印拼接、P站风Logo、诺基亚短信、穴位图、ADB、GIF、JWT、YAML、二维码等" />
   <meta name="theme-color" content="#0b1320" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <title>DevTools</title>
-  <script>try{if(navigator.standalone||matchMedia('(display-mode: standalone)').matches)document.documentElement.classList.add('is-pwa-standalone')}catch(e){}</script>
+  <meta name="apple-mobile-web-app-title" content="DevTools" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icons/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+  <title>DevTools · 本地实用小工具合集</title>
+  <script>
+    (function () {
+      try {
+        var standalone = window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
+        if (standalone) document.documentElement.classList.add("is-pwa-standalone");
+      } catch (e) {}
+    })();
+  </script>
   <script src="./lib/tools-build.js?v=2026.09.06-083100"></script>
   <link rel="stylesheet" href="./style.css?v=2026.09.06-083100" />
   <link rel="stylesheet" href="./workspace-nav.css?v=2026.09.06-083100" />
@@ -16,16 +28,20 @@
   <script src="./lib/theme-presets.js?v=2026.09.06-083100"></script>
   <script src="./lib/boot-loader.js?v=2026.09.06-083100"></script>
   <script>
-  (function(){
-    try{
-      var raw=String(location.hash||'').replace(/^#/,'').trim();
-      var head=raw.split(/[/?]/)[0]||'';
-      var last=localStorage.getItem('devtools-tool-last-v1');
-      var id='timestamp';
-      if(head&&head!=='timestamp')id=head;else if(last&&last!=='timestamp')id=last;
-      document.documentElement.dataset.bootPanel=id;
-    }catch(e){document.documentElement.dataset.bootPanel='timestamp'}
-  })();
+    (function () {
+      try {
+        var raw = String(location.hash || "").replace(/^#/, "").trim();
+        var head = raw.split(/[/?]/).filter(Boolean)[0] || "";
+        var last = localStorage.getItem("devtools-tool-last-v1") || sessionStorage.getItem("devtools-tool-last-session-v1");
+        var id = "timestamp";
+        if (head === "media") id = raw.split("/").filter(Boolean)[1] || last || "gifmaker";
+        else if (head && head !== "timestamp") id = head;
+        else if (last && last !== "timestamp") id = last;
+        document.documentElement.dataset.bootPanel = id;
+      } catch (e) {
+        document.documentElement.dataset.bootPanel = "timestamp";
+      }
+    })();
   </script>
 </head>
 <body>
@@ -37,39 +53,87 @@
         <span class="tool-ver site-tools-ver mono" id="site-tools-version">v2026.09.06-083100</span>
       </div>
       <div class="header-actions">
-        <button type="button" class="ghost-btn" id="site-force-refresh">强制刷新</button>
+        <button type="button" class="ghost-btn header-action-collapse" id="site-force-refresh">强制刷新</button>
+        <button type="button" class="ghost-btn site-chrome-toggle" id="site-chrome-toggle">隐藏顶栏</button>
+        <button type="button" class="ghost-btn" id="pwa-install" hidden>安装应用</button>
         <button type="button" class="ghost-btn" id="theme-open">主题</button>
-        <button type="button" class="ghost-btn" id="header-more-toggle">更多</button>
+        <a class="ghost-btn header-about-link" href="#about">关于</a>
+        <a class="ghost-btn header-about-link" href="#setup">安装帮助</a>
         <button type="button" class="nav-menu-btn" id="nav-open">工具</button>
+        <div class="header-more-wrap">
+          <button type="button" class="ghost-btn" id="header-more-toggle" aria-controls="header-more-menu">更多</button>
+          <div id="header-more-menu" class="header-more-menu" hidden role="menu">
+            <button type="button" class="header-more-item" data-header-proxy="site-force-refresh">强制刷新</button>
+            <a class="header-more-item" href="#about">关于</a>
+            <a class="header-more-item" href="#setup">安装帮助</a>
+          </div>
+        </div>
       </div>
     </div>
     <p class="tagline">常用开发小工具合集 · 本地处理不上传 · 单工具工作台</p>
   </header>
   <div class="app-layout">
     <div class="nav-backdrop" id="nav-backdrop" hidden></div>
-    <aside class="nav-bar" id="nav-bar" role="navigation" aria-label="工具导航">
-      <div class="nav-drawer-head"><strong>选择工具</strong><button type="button" class="ghost-btn" id="nav-close">关闭</button></div>
-      <input id="tool-search" class="nav-search" type="search" placeholder="搜索工具…" />
+    <aside class="nav-bar" id="nav-bar" role="navigation">
+      <div class="nav-drawer-head"><strong id="nav-drawer-title">选择工具</strong><button type="button" class="ghost-btn nav-close-btn" id="nav-close">关闭</button></div>
+      <label class="nav-search-wrap" for="tool-search"><input id="tool-search" class="nav-search" type="search" placeholder="搜索工具…" /></label>
+      <div class="nav-compact-bar"><label class="nav-setting" for="nav-compact"><input type="checkbox" id="nav-compact" /> 仅显示分类</label></div>
       <div class="nav-bar-scroll" id="nav-bar-scroll">
-        <div id="tool-recent" hidden></div>
-        <div id="tool-favorites"></div>
+        <div class="nav-strip nav-recent" id="tool-recent" hidden>
+          <button type="button" class="nav-strip-toggle" id="tool-recent-toggle"><span>最近使用</span><span id="tool-recent-count"></span></button>
+          <div id="tool-recent-list"></div>
+        </div>
+        <div class="nav-strip nav-favorites" id="tool-favorites">
+          <div class="nav-fav-head"><p class="nav-fav-title" id="tool-fav-title">常用工具</p><button type="button" class="nav-fav-add" id="tool-fav-add">+</button></div>
+          <div id="tool-fav-picker" hidden></div>
+          <div id="tool-fav-list"></div>
+        </div>
         <nav class="tool-nav" id="tool-nav"></nav>
+      </div>
+      <div class="nav-footer-actions">
+        <p id="nav-cache-meta">暂无缓存</p>
+        <div class="nav-footer-toolbar">
+          <button type="button" class="nav-footer-btn" id="nav-organize-open">整理顺序</button>
+          <button type="button" class="nav-footer-btn" id="nav-cache-clear">清理缓存</button>
+          <button type="button" class="nav-footer-btn" id="nav-reset">默认排序</button>
+        </div>
       </div>
     </aside>
     <main class="shell">
       <div class="workspace-top" id="workspace-top">
         <div class="workspace-tool-meta">
-          <h1 class="workspace-title" id="workspace-title">工具</h1>
+          <div class="workspace-title-wrap"><h1 class="workspace-title" id="workspace-title">时间戳</h1><span id="dr-top-badge" class="dr-top-badge" hidden></span></div>
           <div class="workspace-tool-actions">
+            <button type="button" class="ghost-btn" id="site-chrome-toggle-float">显示顶栏</button>
             <button type="button" class="ghost-btn" id="workspace-share">分享</button>
             <button type="button" class="ghost-btn workspace-switch" id="workspace-switch">切换工具</button>
           </div>
         </div>
+        <div class="category-subnav" id="category-subnav" hidden></div>
       </div>
-      <div id="workspace-panels" class="workspace-panels"></div>
+      <div id="workspace-panels" class="workspace-panels">
+        <div id="devtools-tool-load" class="workspace-panel-load" hidden>
+          <div class="workspace-panel-load-card">
+            <div class="workspace-panel-load-bar"><span class="devtools-tool-load-fill"></span></div>
+            <p id="devtools-tool-load-label" hidden></p>
+          </div>
+        </div>
+      </div>
+      <section class="devtools-giscus-wrap"><div id="devtools-giscus" class="devtools-giscus"></div></section>
     </main>
   </div>
+  <dialog class="memo-dialog theme-dlg" id="theme-dlg"><div class="theme-dlg-shell"><div class="memo-dialog-body"><h2 class="subhead">站点主题</h2><div class="theme-presets" id="theme-presets"></div><div id="theme-custom-box" hidden></div><span id="theme-bg-status"></span><input id="theme-bg-file" type="file" hidden /><button type="button" id="theme-bg-clear" hidden></button><input id="theme-bg-overlay" type="range" hidden /><span id="theme-bg-overlay-val" hidden></span><input id="theme-use-custom" type="checkbox" hidden /><input id="theme-reduce-glow" type="checkbox" hidden /><input id="theme-color-bg0" type="color" hidden /><input id="theme-color-ink" type="color" hidden /><input id="theme-color-muted" type="color" hidden /><input id="theme-color-accent" type="color" hidden /><input id="theme-color-accent2" type="color" hidden /><input id="theme-color-panel" type="color" hidden /></div><div class="theme-dlg-actions"><button type="button" id="theme-reset">恢复默认</button><button type="button" id="theme-close">完成</button></div></div></dialog>
   <div class="toast" id="toast" hidden></div>
+  <dialog id="nav-recent-dlg"><div id="nav-recent-dlg-list"></div><button type="button" id="nav-recent-dlg-close">×</button></dialog>
+  <dialog id="nav-organize"><button type="button" id="nav-organize-close">×</button><input id="nav-org-search" /><div id="nav-org-panel-groups"></div><div id="nav-org-panel-tools" hidden></div><div id="nav-org-panel-favorites" hidden></div><select id="nav-org-tool-group"></select><div id="nav-org-tool-list"></div><button type="button" id="nav-organize-reset"></button><button type="button" id="nav-organize-cancel"></button><button type="button" id="nav-organize-done"></button></dialog>
+  <div id="nav-tool-ctx" hidden></div>
+  <div id="memo-temp-prompt-stack"></div>
+  <div id="vsplit-fs" hidden></div>
+  <div id="countdown-fs" hidden></div>
+  <div id="dateremind-fs" hidden></div>
+  <div id="muyu-fs" hidden></div>
+  <div id="ruler-fs" hidden></div>
+  <dialog id="adb-getprop-dlg"><div id="adb-getprop-list"></div><input id="adb-getprop-search" /><button type="button" id="adb-getprop-reload"></button><button type="button" id="adb-getprop-close"></button><span id="adb-getprop-meta"></span><p id="adb-getprop-empty" hidden></p></dialog>
   <script src="./lib/bridge-token.js?v=2026.09.06-083100"></script>
   <script src="./lib/unified-bridge-bundle.js?v=2026.09.06-083100"></script>
   <script src="./lib/bridge-shell.js?v=2026.09.06-083100"></script>
@@ -77,6 +141,8 @@
   <script src="./lib/nav-scale.js?v=2026.09.06-083100"></script>
   <script src="./lib/lazy-scripts.js?v=2026.09.06-083100"></script>
   <script src="./lib/panel-loader.js?v=2026.09.06-083100"></script>
+  <script src="./lib/giscus-config.js?v=2026.09.06-083100"></script>
+  <script src="./lib/giscus.js?v=2026.09.06-083100"></script>
   <script src="./theme.js?v=2026.09.06-083100"></script>
   <script src="./app.js?v=2026.09.06-083100"></script>
 </body>
