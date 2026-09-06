@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const BUILD = "2026.09.06-083100";
+  const BUILD = "2026.09.06-084000";
   window.TOOLS_BUILD = BUILD;
   window.TOOLS_VERSION = BUILD;
 
@@ -8,7 +8,6 @@
     const el = document.getElementById("site-tools-version");
     if (!el) return;
     el.textContent = `v${BUILD}`;
-    el.title = `工具页逻辑版本 ${BUILD}`;
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", paintVersion, { once: true });
@@ -16,23 +15,9 @@
 
   try { localStorage.setItem("devtools-seen-build-v1", BUILD); } catch (_) {}
 
-  try {
-    const synth = window.speechSynthesis;
-    if (synth && !synth.__devtoolsSpeakPatched) {
-      synth.__devtoolsSpeakPatched = true;
-      const origSpeak = synth.speak.bind(synth);
-      const origCancel = synth.cancel.bind(synth);
-      synth.cancel = function () {
-        try { origCancel(); } catch (_) {}
-        try { if (synth.paused) synth.resume(); } catch (_) {}
-      };
-      synth.speak = function (utterance) {
-        if (!utterance) return;
-        try { if (synth.paused) synth.resume(); } catch (_) {}
-        try { origSpeak(utterance); } catch (_) {}
-      };
-    }
-  } catch (_) {}
+  window.setTimeout(() => {
+    try { window.DevToolsBoot?.finish?.(); } catch (_) {}
+  }, 6000);
 
   try {
     if (!document.querySelector("script[data-kidsflash-nav]")) {
