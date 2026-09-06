@@ -1,7 +1,7 @@
 (() => {
   "use strict";
-  if (window.__kidsflashNavV3) return;
-  window.__kidsflashNavV3 = true;
+  if (window.__kidsflashNavV4) return;
+  window.__kidsflashNavV4 = true;
 
   function speakFromTitles(root) {
     const synth = window.speechSynthesis;
@@ -21,10 +21,24 @@
     if (en) say(en, "en-US");
   }
 
+  function speakAfterPaint(root) {
+    requestAnimationFrame(() => {
+      speakFromTitles(root);
+      setTimeout(() => speakFromTitles(root), 40);
+    });
+  }
+
   function patchRoot(root) {
-    if (!root || root.dataset.navV3 === "1") return;
-    if (root.dataset.kidsflashBound !== "1") return;
-    root.dataset.navV3 = "1";
+    if (!root || root.dataset.kidsflashBound !== "1") return;
+    if (root.dataset.navV4 === "1") return;
+
+    if (root.dataset.navV3 === "1") {
+      root.dataset.navV4 = "1";
+      root.querySelector(".kidsflash-random-btn")?.addEventListener("click", () => speakAfterPaint(root));
+      return;
+    }
+
+    root.dataset.navV4 = "1";
     const speak = root.querySelector('[id$="-speak"]');
     const next = root.querySelector('[id$="-next"]');
     const prev = root.querySelector('[id$="-prev"]');
@@ -53,7 +67,7 @@
         ev.preventDefault();
         ev.stopPropagation();
         origNext?.click();
-        speakFromTitles(root);
+        speakAfterPaint(root);
       });
     }
     if (next) {
@@ -69,6 +83,7 @@
         ev.preventDefault();
         ev.stopPropagation();
         random?.click();
+        speakAfterPaint(root);
       });
     }
   }
