@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const BUILD = "2026.09.06-082700";
+  const BUILD = "2026.09.06-083100";
   window.TOOLS_BUILD = BUILD;
   window.TOOLS_VERSION = BUILD;
 
@@ -32,11 +32,6 @@
         try { origSpeak(utterance); } catch (_) {}
       };
     }
-  } catch (_) {}
-
-  try {
-    const bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-    if (bar) bar.setAttribute("content", "black");
   } catch (_) {}
 
   try {
