@@ -8,11 +8,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <title>DevTools · 本地实用小工具合集</title>
   <script>try{if(navigator.standalone||matchMedia('(display-mode: standalone)').matches)document.documentElement.classList.add('is-pwa-standalone')}catch(e){}</script>
-  <script src="./lib/tools-build.js?v=2026.09.06-091200"></script>
-  <link rel="stylesheet" href="./style.css?v=2026.09.06-091200" />
-  <link rel="stylesheet" href="./workspace-nav.css?v=2026.09.06-091200" />
-  <script src="./lib/theme-presets.js?v=2026.09.06-091200"></script>
-  <script src="./lib/boot-loader.js?v=2026.09.06-091200"></script>
+  <script src="./lib/tools-build.js?v=2026.09.06-092400"></script>
+  <link rel="stylesheet" href="./style.css?v=2026.09.06-092400" />
+  <link rel="stylesheet" href="./workspace-nav.css?v=2026.09.06-092400" />
+  <script src="./lib/theme-presets.js?v=2026.09.06-092400"></script>
+  <script src="./lib/boot-loader.js?v=2026.09.06-092400"></script>
   <script>
   (function(){try{var raw=String(location.hash||'').replace(/^#/,'').trim();var head=raw.split(/[/?]/)[0]||'';var last=localStorage.getItem('devtools-tool-last-v1');var id='timestamp';if(head&&head!=='timestamp')id=head;else if(last&&last!=='timestamp')id=last;document.documentElement.dataset.bootPanel=id;}catch(e){document.documentElement.dataset.bootPanel='timestamp'}})();
   </script>
@@ -22,21 +22,17 @@
     <div class="header-row">
       <div class="header-brand-block">
         <a class="brand" href="./"><span class="brand-mark"></span><span class="brand-name">DevTools</span></a>
-        <span class="tool-ver site-tools-ver mono" id="site-tools-version">v2026.09.06-091200</span>
+        <span class="tool-ver site-tools-ver mono" id="site-tools-version">v2026.09.06-092400</span>
       </div>
       <div class="header-actions">
         <button type="button" class="ghost-btn header-action-collapse" id="site-force-refresh">强制刷新</button>
         <button type="button" class="ghost-btn" id="theme-open">主题</button>
-        <a class="ghost-btn header-about-link header-action-collapse" href="#about">关于</a>
-        <a class="ghost-btn header-about-link header-action-collapse" href="#setup">安装帮助</a>
-        <button type="button" class="nav-menu-btn header-action-collapse" id="nav-open">工具</button>
         <div class="header-more-wrap">
-          <button type="button" class="ghost-btn" id="header-more-toggle" aria-expanded="false" aria-controls="header-more-menu" aria-haspopup="menu">更多</button>
-          <div id="header-more-menu" class="header-more-menu" hidden role="menu" aria-label="更多操作">
-            <button type="button" class="header-more-item" role="menuitem" data-header-proxy="site-force-refresh">强制刷新</button>
-            <a class="header-more-item" role="menuitem" href="#about">关于</a>
-            <a class="header-more-item" role="menuitem" href="#setup">安装帮助</a>
-            <button type="button" class="header-more-item" role="menuitem" data-header-proxy="pwa-install" id="header-more-pwa" hidden>安装应用</button>
+          <button type="button" class="ghost-btn" id="header-more-toggle" aria-expanded="false" aria-controls="header-more-menu">更多</button>
+          <div id="header-more-menu" class="header-more-menu" hidden role="menu">
+            <button type="button" class="header-more-item" data-header-proxy="site-force-refresh">强制刷新</button>
+            <a class="header-more-item" href="#about">关于</a>
+            <a class="header-more-item" href="#setup">安装帮助</a>
           </div>
         </div>
       </div>
@@ -44,19 +40,47 @@
   </header>
   <div class="app-layout">
     <div class="nav-backdrop" id="nav-backdrop" hidden></div>
-    <aside class="nav-bar" id="nav-bar">
-      <div class="nav-drawer-head"><strong id="nav-drawer-title">选择工具</strong><button type="button" class="ghost-btn nav-close-btn" id="nav-close">关闭</button></div>
-      <input id="tool-search" class="nav-search" type="search" placeholder="搜索工具…" />
-      <input id="nav-compact" type="checkbox" />
-      <div id="nav-bar-scroll">
-        <div id="tool-recent" hidden></div>
-        <div id="tool-favorites"><p id="tool-fav-title">常用</p><button type="button" id="tool-fav-add">+</button><div id="tool-fav-picker" hidden></div><div id="tool-fav-list"></div></div>
-        <nav class="tool-nav" id="tool-nav"></nav>
+    <aside class="nav-bar" id="nav-bar" role="navigation" aria-label="工具导航" aria-hidden="true" inert>
+      <div class="nav-drawer-head">
+        <strong id="nav-drawer-title">选择工具</strong>
+        <button type="button" class="ghost-btn nav-close-btn" id="nav-close">关闭</button>
       </div>
-      <p id="nav-cache-meta"></p>
-      <button type="button" id="nav-organize-open">整理</button>
-      <button type="button" id="nav-cache-clear">清理缓存</button>
-      <button type="button" id="nav-reset">默认</button>
+      <label class="nav-search-wrap" for="tool-search">
+        <span class="visually-hidden">搜索工具</span>
+        <input id="tool-search" class="nav-search" type="search" placeholder="搜索工具…" autocomplete="off" enterkeyhint="search" />
+      </label>
+      <div class="nav-compact-bar">
+        <label class="nav-setting nav-compact-setting" for="nav-compact">
+          <input type="checkbox" id="nav-compact" />
+          <span>仅显示分类</span>
+        </label>
+      </div>
+      <div class="nav-bar-scroll" id="nav-bar-scroll">
+        <div class="nav-strip nav-recent" id="tool-recent" hidden>
+          <button type="button" class="nav-strip-toggle" id="tool-recent-toggle">
+            <span class="nav-strip-toggle-label">最近使用</span>
+            <span class="nav-strip-toggle-meta" id="tool-recent-count"></span>
+          </button>
+          <div class="nav-strip-list nav-recent-list" id="tool-recent-list" role="list"></div>
+        </div>
+        <div class="nav-strip nav-favorites nav-group" id="tool-favorites" data-group="favorites">
+          <div class="nav-strip-head nav-fav-head">
+            <p class="nav-group-title nav-fav-title" id="tool-fav-title">常用工具</p>
+            <button type="button" class="nav-fav-add" id="tool-fav-add">+</button>
+          </div>
+          <div class="nav-fav-picker" id="tool-fav-picker" hidden></div>
+          <div class="nav-group-tools nav-fav-tools" id="tool-fav-list" role="list"></div>
+        </div>
+        <nav class="tool-nav" id="tool-nav" aria-label="工具分组"></nav>
+      </div>
+      <div class="nav-footer-actions">
+        <p class="nav-cache-meta" id="nav-cache-meta">暂无缓存</p>
+        <div class="nav-footer-toolbar">
+          <button type="button" class="nav-reset nav-footer-btn nav-organize-open" id="nav-organize-open">整理顺序</button>
+          <button type="button" class="nav-reset nav-cache-clear nav-footer-btn" id="nav-cache-clear">清理缓存</button>
+          <button type="button" class="nav-reset nav-footer-btn" id="nav-reset">默认排序</button>
+        </div>
+      </div>
     </aside>
     <main class="shell">
       <div class="workspace-top" id="workspace-top">
@@ -66,12 +90,12 @@
             <span id="dr-top-badge" class="dr-top-badge" hidden></span>
           </div>
           <div class="workspace-tool-actions">
-            <button type="button" class="ghost-btn site-chrome-toggle-float" id="site-chrome-toggle-float" aria-pressed="true">显示顶栏</button>
+            <button type="button" class="ghost-btn site-chrome-toggle-float" id="site-chrome-toggle-float">显示顶栏</button>
             <button type="button" class="ghost-btn workspace-share" id="workspace-share">分享</button>
             <button type="button" class="ghost-btn workspace-switch" id="workspace-switch">切换工具</button>
           </div>
         </div>
-        <div class="category-subnav media-subnav" id="category-subnav" hidden role="tablist"></div>
+        <div class="category-subnav media-subnav" id="category-subnav" hidden></div>
       </div>
       <div id="workspace-panels" class="workspace-panels">
         <div id="devtools-tool-load" hidden><span class="devtools-tool-load-fill"></span><p id="devtools-tool-load-label" hidden></p></div>
@@ -80,25 +104,41 @@
   </div>
   <div id="toast" hidden></div>
   <button type="button" id="pwa-install" hidden></button>
-  <dialog class="memo-dialog theme-dlg" id="theme-dlg" hidden>
+  <dialog class="memo-dialog theme-dlg" id="theme-dlg" aria-label="主题设置">
     <div class="theme-dlg-shell">
       <div class="memo-dialog-body theme-dlg-body">
-        <div class="label-row"><h2 class="subhead">站点主题</h2></div>
+        <div class="label-row">
+          <h2 class="subhead">站点主题</h2>
+          <p class="hint tight">预设偏护眼 · 可自定义颜色与背景图 · 仅保存在本机</p>
+        </div>
         <div class="theme-presets" id="theme-presets" role="group" aria-label="预设主题"></div>
-        <input id="theme-use-custom" type="checkbox" hidden />
-        <div id="theme-custom-box" hidden></div>
-        <span id="theme-bg-status" hidden></span>
-        <input id="theme-bg-file" type="file" hidden />
-        <button type="button" id="theme-bg-clear" hidden></button>
-        <input id="theme-bg-overlay" type="range" hidden />
-        <span id="theme-bg-overlay-val" hidden></span>
-        <input id="theme-reduce-glow" type="checkbox" hidden />
-        <input id="theme-color-bg0" type="color" hidden />
-        <input id="theme-color-ink" type="color" hidden />
-        <input id="theme-color-muted" type="color" hidden />
-        <input id="theme-color-accent" type="color" hidden />
-        <input id="theme-color-accent2" type="color" hidden />
-        <input id="theme-color-panel" type="color" hidden />
+        <label class="flag" for="theme-use-custom"><input type="checkbox" id="theme-use-custom" /> 使用自定义颜色</label>
+        <div class="theme-custom-box" id="theme-custom-box" hidden>
+          <div class="theme-color-grid">
+            <label>背景 <input type="color" id="theme-color-bg0" value="#0b1220" /></label>
+            <label>文字 <input type="color" id="theme-color-ink" value="#e8eef8" /></label>
+            <label>次要文字 <input type="color" id="theme-color-muted" value="#93a0b8" /></label>
+            <label>强调色 <input type="color" id="theme-color-accent" value="#2ec4b6" /></label>
+            <label>辅助强调 <input type="color" id="theme-color-accent2" value="#f4a261" /></label>
+            <label>面板底 <input type="color" id="theme-color-panel" value="#0e1626" /></label>
+          </div>
+        </div>
+        <div class="theme-bg-box">
+          <div class="label-row">
+            <strong>背景图</strong>
+            <span class="hint tight mono" id="theme-bg-status">未设置背景图</span>
+          </div>
+          <div class="btn-row tool-actions" style="flex-wrap:wrap">
+            <label class="file-btn" for="theme-bg-file">上传背景图</label>
+            <input id="theme-bg-file" type="file" accept="image/*" hidden />
+            <button type="button" class="ghost-btn" id="theme-bg-clear">清除背景图</button>
+          </div>
+          <label class="theme-overlay-lab" for="theme-bg-overlay">遮罩强度
+            <input id="theme-bg-overlay" type="range" min="15" max="90" value="55" />
+            <span class="mono" id="theme-bg-overlay-val">55%</span>
+          </label>
+        </div>
+        <label class="flag" for="theme-reduce-glow"><input type="checkbox" id="theme-reduce-glow" /> 减弱背景光晕动画</label>
       </div>
       <div class="theme-dlg-actions btn-row tool-actions">
         <button type="button" class="ghost-btn" id="theme-reset">恢复默认</button>
@@ -106,11 +146,11 @@
       </div>
     </div>
   </dialog>
-  <script src="./lib/tool-registry.js?v=2026.09.06-091200"></script>
-  <script src="./lib/nav-scale.js?v=2026.09.06-091200"></script>
-  <script src="./lib/lazy-scripts.js?v=2026.09.06-091200"></script>
-  <script src="./lib/panel-loader.js?v=2026.09.06-091200"></script>
-  <script src="./theme.js?v=2026.09.06-091200"></script>
-  <script src="./app.js?v=2026.09.06-091200"></script>
+  <script src="./lib/tool-registry.js?v=2026.09.06-092400"></script>
+  <script src="./lib/nav-scale.js?v=2026.09.06-092400"></script>
+  <script src="./lib/lazy-scripts.js?v=2026.09.06-092400"></script>
+  <script src="./lib/panel-loader.js?v=2026.09.06-092400"></script>
+  <script src="./theme.js?v=2026.09.06-092400"></script>
+  <script src="./app.js?v=2026.09.06-092400"></script>
 </body>
 </html>
