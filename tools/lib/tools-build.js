@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const BUILD = "2026.09.06-084200";
+  const BUILD = "2026.09.06-091200";
   window.TOOLS_BUILD = BUILD;
   window.TOOLS_VERSION = BUILD;
 
@@ -15,6 +15,17 @@
   } else paintVersion();
 
   try { localStorage.setItem("devtools-seen-build-v1", BUILD); } catch (_) {}
+
+  if (!document.getElementById("devtools-shell-guard-css")) {
+    const st = document.createElement("style");
+    st.id = "devtools-shell-guard-css";
+    st.textContent =
+      "#theme-dlg[hidden] .theme-presets,#theme-dlg[hidden] #theme-presets{display:none!important;}" +
+      ".kidsflash-nav-speak,.kidsflash-nav-speak .primary-btn,.kidsflash-next-main{width:100%!important;min-height:2.7rem!important;}" +
+      ".kidsflash-nav-random{display:none!important;}" +
+      ".kidsflash-nav-step [id$='-next']{background:color-mix(in srgb,var(--accent,#2ec4b6) 28%,transparent)!important;border-color:color-mix(in srgb,var(--accent,#2ec4b6) 65%,var(--line,#3a4458))!important;font-weight:700!important;}";
+    document.head.appendChild(st);
+  }
 
   try {
     const synth = window.speechSynthesis;
@@ -43,39 +54,6 @@
       document.head.appendChild(s);
     }
   } catch (_) {}
-
-  function recoverTruncatedIndex() {
-    if (window.__devtoolsIndexRecover) return;
-    const hasShell = document.getElementById("workspace-panels") && document.querySelector("script[src*='panel-loader']");
-    if (hasShell) return;
-    window.__devtoolsIndexRecover = true;
-    const urls = [
-      "./index.html?_fresh=" + encodeURIComponent(BUILD),
-      "https://cdn.jsdelivr.net/gh/Afra55/Afra55.github.io@42a234664a0b5bac6e54bbc3eb4c8c5aff3811b5/tools/index.html",
-    ];
-    const tryUrl = (i) => {
-      if (i >= urls.length) {
-        try { window.DevToolsBoot?.finish?.(); } catch (_) {}
-        return;
-      }
-      fetch(urls[i], { cache: "no-store" })
-        .then((r) => (r.ok ? r.text() : Promise.reject()))
-        .then((html) => {
-          if (!html || html.indexOf("workspace-panels") < 0 || html.indexOf("<placeholder") >= 0) {
-            throw new Error("bad index");
-          }
-          const next = html.split("2026.09.05-133404").join(BUILD).split("2026.09.06-083100").join(BUILD);
-          document.open();
-          document.write(next);
-          document.close();
-        })
-        .catch(() => tryUrl(i + 1));
-    };
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () => tryUrl(0), { once: true });
-    } else tryUrl(0);
-  }
-  recoverTruncatedIndex();
 
   window.setTimeout(() => {
     try { window.DevToolsBoot?.finish?.(); } catch (_) {}
