@@ -1,7 +1,6 @@
 (() => {
   "use strict";
-  /** 全站构建版本（北京时间后缀）。每次合入功能/修复必须递增此号，并运行 node tools/bump-version.cjs 同步 ?v=。 */
-  const BUILD = "2026.09.06-081600";
+  const BUILD = "2026.09.06-081700";
   window.TOOLS_BUILD = BUILD;
   window.TOOLS_VERSION = BUILD;
 
@@ -9,22 +8,14 @@
     const el = document.getElementById("site-tools-version");
     if (!el) return;
     el.textContent = `v${BUILD}`;
-    el.title = `工具页逻辑版本 ${BUILD}（更新后应看到此号变化）`;
+    el.title = `工具页逻辑版本 ${BUILD}`;
   }
-
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", paintVersion, { once: true });
-  } else {
-    paintVersion();
-  }
+  } else paintVersion();
 
-  const SEEN_KEY = "devtools-seen-build-v1";
   try {
-    const prev = localStorage.getItem(SEEN_KEY);
-    localStorage.setItem(SEEN_KEY, BUILD);
-    if (prev && prev !== BUILD) {
-      window.__devtoolsBuildUpgraded = { from: prev, to: BUILD };
-    }
+    localStorage.setItem("devtools-seen-build-v1", BUILD);
   } catch (_) {}
 
   try {
@@ -33,23 +24,14 @@
       synth.__devtoolsSpeakPatched = true;
       const origSpeak = synth.speak.bind(synth);
       const origCancel = synth.cancel.bind(synth);
-      const resume = () => {
-        try {
-          if (synth.paused) synth.resume();
-        } catch (_) {}
+      synth.cancel = function () {
+        try { origCancel(); } catch (_) {}
+        try { if (synth.paused) synth.resume(); } catch (_) {}
       };
-      synth.cancel = function patchedCancel() {
-        try {
-          origCancel();
-        } catch (_) {}
-        resume();
-      };
-      synth.speak = function patchedSpeak(utterance) {
+      synth.speak = function (utterance) {
         if (!utterance) return;
-        resume();
-        try {
-          origSpeak(utterance);
-        } catch (_) {}
+        try { if (synth.paused) synth.resume(); } catch (_) {}
+        try { origSpeak(utterance); } catch (_) {}
       };
     }
   } catch (_) {}
@@ -66,10 +48,18 @@
       "@media (max-width: 900px){" +
       "body{padding-top:env(safe-area-inset-top,0px);}" +
       ".site-header{padding-top:0.85rem;}" +
-      ".nav-bar,.nav-bar.is-collapsed{" +
-      "padding-top:env(safe-area-inset-top,0px)!important;" +
-      "padding-left:0.85rem!important;padding-right:0.85rem!important;}" +
+      ".nav-bar,.nav-bar.is-collapsed{padding-top:env(safe-area-inset-top,0px)!important;padding-left:0.85rem!important;padding-right:0.85rem!important;}" +
       ".nav-drawer-head{padding-top:0.35rem;}}}";
     document.head.appendChild(st);
   }
+
+  try {
+    if (!document.querySelector("script[data-kidsflash-nav]")) {
+      const s = document.createElement("script");
+      s.src = "./lib/kids-flash-nav.js?v=" + encodeURIComponent(BUILD);
+      s.async = true;
+      s.dataset.kidsflashNav = "1";
+      document.head.appendChild(s);
+    }
+  } catch (_) {}
 })();
