@@ -3,92 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="description" content="实用小工具合集" />
   <meta name="theme-color" content="#0b1320" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <title>DevTools · 本地实用小工具合集</title>
-  <script>try{if(navigator.standalone||matchMedia('(display-mode: standalone)').matches)document.documentElement.classList.add('is-pwa-standalone')}catch(e){}</script>
-  <script src="./lib/tools-build.js?v=2026.09.06-091000"></script>
-  <link rel="stylesheet" href="./style.css?v=2026.09.06-091000" />
-  <link rel="stylesheet" href="./workspace-nav.css?v=2026.09.06-091000" />
-  <script src="./lib/theme-presets.js?v=2026.09.06-091000"></script>
-  <script src="./lib/boot-loader.js?v=2026.09.06-091000"></script>
-  <script>
-  (function(){try{var raw=String(location.hash||'').replace(/^#/,'').trim();var head=raw.split(/[/?]/)[0]||'';var last=localStorage.getItem('devtools-tool-last-v1');var id='timestamp';if(head&&head!=='timestamp')id=head;else if(last&&last!=='timestamp')id=last;document.documentElement.dataset.bootPanel=id;}catch(e){document.documentElement.dataset.bootPanel='timestamp'}})();
-  </script>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <title>DevTools</title>
+  <script src="./lib/tools-build.js?v=2026.09.06-091200"></script>
+  <link rel="stylesheet" href="./style.css?v=2026.09.06-091200" />
+  <link rel="stylesheet" href="./workspace-nav.css?v=2026.09.06-091200" />
+  <link rel="stylesheet" href="./styles/bridge-shell.css?v=2026.09.06-091200" />
+  <script src="./lib/theme-presets.js?v=2026.09.06-091200"></script>
+  <script src="./lib/boot-loader.js?v=2026.09.06-091200"></script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-row">
-      <div class="header-brand-block">
-        <a class="brand" href="./"><span class="brand-mark"></span><span class="brand-name">DevTools</span></a>
-        <span class="tool-ver site-tools-ver mono" id="site-tools-version">v2026.09.06-091000</span>
-      </div>
-      <div class="header-actions">
-        <button type="button" class="ghost-btn header-action-collapse" id="site-force-refresh">强制刷新</button>
-        <button type="button" class="ghost-btn" id="theme-open">主题</button>
-        <a class="ghost-btn header-about-link header-action-collapse" href="#about">关于</a>
-        <a class="ghost-btn header-about-link header-action-collapse" href="#setup">安装帮助</a>
-        <button type="button" class="nav-menu-btn header-action-collapse" id="nav-open">工具</button>
-        <div class="header-more-wrap">
-          <button type="button" class="ghost-btn" id="header-more-toggle" aria-expanded="false" aria-controls="header-more-menu" aria-haspopup="menu">更多</button>
-          <div id="header-more-menu" class="header-more-menu" hidden role="menu" aria-label="更多操作">
-            <button type="button" class="header-more-item" role="menuitem" data-header-proxy="site-force-refresh">强制刷新</button>
-            <a class="header-more-item" role="menuitem" href="#about">关于</a>
-            <a class="header-more-item" role="menuitem" href="#setup">安装帮助</a>
-            <button type="button" class="header-more-item" role="menuitem" data-header-proxy="pwa-install" id="header-more-pwa" hidden>安装应用</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </header>
-  <div class="app-layout">
-    <div class="nav-backdrop" id="nav-backdrop" hidden></div>
-    <aside class="nav-bar" id="nav-bar">
-      <div class="nav-drawer-head"><strong id="nav-drawer-title">选择工具</strong><button type="button" class="ghost-btn nav-close-btn" id="nav-close">关闭</button></div>
-      <input id="tool-search" class="nav-search" type="search" placeholder="搜索工具…" />
-      <input id="nav-compact" type="checkbox" />
-      <div id="nav-bar-scroll">
-        <div id="tool-recent" hidden></div>
-        <div id="tool-favorites"><p id="tool-fav-title">常用</p><button type="button" id="tool-fav-add">+</button><div id="tool-fav-picker" hidden></div><div id="tool-fav-list"></div></div>
-        <nav class="tool-nav" id="tool-nav"></nav>
-      </div>
-      <p id="nav-cache-meta"></p>
-      <button type="button" id="nav-organize-open">整理</button>
-      <button type="button" id="nav-cache-clear">清理缓存</button>
-      <button type="button" id="nav-reset">默认</button>
-    </aside>
-    <main class="shell">
-      <div class="workspace-top" id="workspace-top">
-        <div class="workspace-tool-meta">
-          <div class="workspace-title-wrap">
-            <h1 class="workspace-title" id="workspace-title">时间戳</h1>
-            <span id="dr-top-badge" class="dr-top-badge" hidden></span>
-          </div>
-          <div class="workspace-tool-actions">
-            <button type="button" class="ghost-btn site-chrome-toggle-float" id="site-chrome-toggle-float" aria-pressed="true">显示顶栏</button>
-            <button type="button" class="ghost-btn workspace-share" id="workspace-share">分享</button>
-            <button type="button" class="ghost-btn workspace-switch" id="workspace-switch">切换工具</button>
-          </div>
-        </div>
-        <div class="category-subnav media-subnav" id="category-subnav" hidden role="tablist"></div>
-      </div>
-      <div id="workspace-panels" class="workspace-panels">
-        <div id="devtools-tool-load" hidden><span class="devtools-tool-load-fill"></span><p id="devtools-tool-load-label" hidden></p></div>
-      </div>
-    </main>
-  </div>
-  <div id="toast" hidden></div>
-  <button type="button" id="pwa-install" hidden></button>
-  <div id="theme-dlg" hidden></div>
-  <div id="theme-presets"></div>
-  <button type="button" id="theme-close" hidden></button>
-  <button type="button" id="theme-reset" hidden></button>
-  <script src="./lib/tool-registry.js?v=2026.09.06-091000"></script>
-  <script src="./lib/nav-scale.js?v=2026.09.06-091000"></script>
-  <script src="./lib/lazy-scripts.js?v=2026.09.06-091000"></script>
-  <script src="./lib/panel-loader.js?v=2026.09.06-091000"></script>
-  <script src="./theme.js?v=2026.09.06-091000"></script>
-  <script src="./app.js?v=2026.09.06-091000"></script>
-</body>
-</html>
+<p>USE FULL FILE</p>
+</body></html>
