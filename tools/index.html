@@ -8,11 +8,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <title>DevTools · 本地实用小工具合集</title>
   <script>try{if(navigator.standalone||matchMedia('(display-mode: standalone)').matches)document.documentElement.classList.add('is-pwa-standalone')}catch(e){}</script>
-  <script src="./lib/tools-build.js?v=2026.09.06-090400"></script>
-  <link rel="stylesheet" href="./style.css?v=2026.09.06-090400" />
-  <link rel="stylesheet" href="./workspace-nav.css?v=2026.09.06-090400" />
-  <script src="./lib/theme-presets.js?v=2026.09.06-090400"></script>
-  <script src="./lib/boot-loader.js?v=2026.09.06-090400"></script>
+  <script src="./lib/tools-build.js?v=2026.09.06-091000"></script>
+  <link rel="stylesheet" href="./style.css?v=2026.09.06-091000" />
+  <link rel="stylesheet" href="./workspace-nav.css?v=2026.09.06-091000" />
+  <script src="./lib/theme-presets.js?v=2026.09.06-091000"></script>
+  <script src="./lib/boot-loader.js?v=2026.09-06-091000"></script>
   <script>
   (function(){try{var raw=String(location.hash||'').replace(/^#/,'').trim();var head=raw.split(/[/?]/)[0]||'';var last=localStorage.getItem('devtools-tool-last-v1');var id='timestamp';if(head&&head!=='timestamp')id=head;else if(last&&last!=='timestamp')id=last;document.documentElement.dataset.bootPanel=id;}catch(e){document.documentElement.dataset.bootPanel='timestamp'}})();
   </script>
@@ -22,7 +22,7 @@
     <div class="header-row">
       <div class="header-brand-block">
         <a class="brand" href="./"><span class="brand-mark"></span><span class="brand-name">DevTools</span></a>
-        <span class="tool-ver site-tools-ver mono" id="site-tools-version">v2026.09.06-090400</span>
+        <span class="tool-ver site-tools-ver mono" id="site-tools-version">v2026.09.06-091000</span>
       </div>
       <div class="header-actions">
         <button type="button" class="ghost-btn header-action-collapse" id="site-force-refresh">强制刷新</button>
@@ -59,11 +59,19 @@
       <button type="button" id="nav-reset">默认</button>
     </aside>
     <main class="shell">
-      <div id="workspace-top" class="workspace-top">
-        <h1 class="workspace-title" id="workspace-title">工具</h1>
-        <button type="button" class="ghost-btn" id="workspace-share">分享</button>
-        <button type="button" class="ghost-btn workspace-switch" id="workspace-switch">切换工具</button>
-        <div id="category-subnav" hidden></div>
+      <div class="workspace-top" id="workspace-top">
+        <div class="workspace-tool-meta">
+          <div class="workspace-title-wrap">
+            <h1 class="workspace-title" id="workspace-title">时间戳</h1>
+            <span id="dr-top-badge" class="dr-top-badge" hidden></span>
+          </div>
+          <div class="workspace-tool-actions">
+            <button type="button" class="ghost-btn site-chrome-toggle-float" id="site-chrome-toggle-float" aria-pressed="true">显示顶栏</button>
+            <button type="button" class="ghost-btn workspace-share" id="workspace-share">分享</button>
+            <button type="button" class="ghost-btn workspace-switch" id="workspace-switch">切换工具</button>
+          </div>
+        </div>
+        <div class="category-subnav media-subnav" id="category-subnav" hidden role="tablist"></div>
       </div>
       <div id="workspace-panels" class="workspace-panels">
         <div id="devtools-tool-load" hidden><span class="devtools-tool-load-fill"></span><p id="devtools-tool-load-label" hidden></p></div>
@@ -76,11 +84,11 @@
   <div id="theme-presets"></div>
   <button type="button" id="theme-close" hidden></button>
   <button type="button" id="theme-reset" hidden></button>
-  <script src="./lib/tool-registry.js?v=2026.09.06-090400"></script>
-  <script src="./lib/nav-scale.js?v=2026.09.06-090400"></script>
-  <script src="./lib/lazy-scripts.js?v=2026.09.06-090400"></script>
-  <script src="./lib/panel-loader.js?v=2026.09.06-090400"></script>
-  <script src="./theme.js?v=2026.09.06-090400"></script>
-  <script src="./app.js?v=2026.09.06-090400"></script>
+  <script src="./lib/tool-registry.js?v=2026.09.06-091000"></script>
+  <script src="./lib/nav-scale.js?v=2026.09.06-091000"></script>
+  <script src="./lib/lazy-scripts.js?v=2026.09.06-091000"></script>
+  <script src="./lib/panel-loader.js?v=2026.09.06-091000"></script>
+  <script src="./theme.js?v=2026.09.06-091000"></script>
+  <script src="./app.js?v=2026.09.06-091000"></script>
 </body>
 </html>
