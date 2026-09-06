@@ -3,10 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-  <title>DevTools restore in progress</title>
+  <meta name="description" content="实用小工具：时间戳、倒计时、日期提醒、颜色、Base64、JSON、正则、URL、UUID、Hash、文本、命名转换、坐标系互转、图片压缩裁剪水印拼接、P站风Logo、诺基亚短信、穴位图、ADB、GIF、JWT、YAML、二维码等" />
+  <meta name="theme-color" content="#0b1320" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="DevTools" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icons/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+  <title>DevTools · 本地实用小工具合集</title>
+  <script>
+    (function () {
+      try {
+        var standalone =
+          window.navigator.standalone === true ||
+          window.matchMedia("(display-mode: standalone)").matches ||
+          window.matchMedia("(display-mode: window-controls-overlay)").matches;
+        if (standalone) document.documentElement.classList.add("is-pwa-standalone");
+      } catch (e) {}
+    })();
+  </script>
+  <script src="./lib/tools-build.js?v=2026.09.06-083100"></script>
+  <link rel="stylesheet" href="./style.css?v=2026.09.06-083100" />
+  <link rel="stylesheet" href="./workspace-nav.css?v=2026.09.06-083100" />
+  <link rel="stylesheet" href="./styles/bridge-shell.css?v=2026.09.06-083100" />
+  <script src="./lib/theme-presets.js?v=2026.09.06-083100"></script>
+  <script src="./lib/boot-loader.js?v=2026.09.06-083100"></script>
 </head>
 <body>
-  <p>Restoring… please wait.</p>
-  <script>location.replace('./index.html?_fresh=1#'+(location.hash||'timestamp'));</script>
+  <p style="padding:2rem">页面正在从 Git 恢复。请点右上角更多 → 强制刷新。若仍是这段话，稍候再试。</p>
+  <script src="./app.js?v=2026.09.06-083100"></script>
 </body>
 </html>
