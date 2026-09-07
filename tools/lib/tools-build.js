@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const BUILD = "2026.09.06-092700";
+  const BUILD = "2026.09.07-113200";
   window.TOOLS_BUILD = BUILD;
   window.TOOLS_VERSION = BUILD;
 
@@ -43,8 +43,4 @@
       };
     }
   } catch (_) {}
-
-  window.setTimeout(() => {
-    try { window.DevToolsBoot?.finish?.(); } catch (_) {}
-  }, 8000);
 })();
