@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const BUILD = "2026.09.07-113700";
+  const BUILD = "2026.09.07-114300";
   window.TOOLS_BUILD = BUILD;
   window.TOOLS_VERSION = BUILD;
 
@@ -16,58 +16,43 @@
 
   try { localStorage.setItem("devtools-seen-build-v1", BUILD); } catch (_) {}
 
-  function addCss(href) {
-    if (document.querySelector(`link[href*="${href.split("?")[0]}"]`)) return;
-    const l = document.createElement("link");
-    l.rel = "stylesheet";
-    l.href = href;
-    document.head.appendChild(l);
+  function shellComplete() {
+    return !!(
+      document.getElementById("muyu-fs") &&
+      document.getElementById("nav-organize") &&
+      document.getElementById("vsplit-fs") &&
+      document.getElementById("countdown-fs") &&
+      document.getElementById("ruler-fs")
+    );
   }
 
-  function addScript(src) {
-    return new Promise((resolve) => {
-      const file = src.split("?")[0];
-      if (document.querySelector(`script[src*="${file}"]`)) {
-        resolve();
-        return;
-      }
-      const s = document.createElement("script");
-      s.src = src;
-      s.onload = () => resolve();
-      s.onerror = () => resolve();
-      document.head.appendChild(s);
-    });
+  function restoreFullShell() {
+    if (shellComplete() || window.__devtoolsShellRestore) return;
+    window.__devtoolsShellRestore = true;
+    const urls = [
+      "https://cdn.jsdelivr.net/gh/Afra55/Afra55.github.io@42a234664a0b5bac6e54bbc3eb4c8c5aff3811b5/tools/index.html",
+      "https://raw.githubusercontent.com/Afra55/Afra55.github.io/42a234664a0b5bac6e54bbc3eb4c8c5aff3811b5/tools/index.html",
+    ];
+    const tryUrl = (i) => {
+      if (i >= urls.length) return;
+      fetch(urls[i], { cache: "no-store" })
+        .then((r) => (r.ok ? r.text() : Promise.reject(new Error("bad"))))
+        .then((html) => {
+          if (!html || html.indexOf("muyu-fs-stage") < 0 || html.indexOf("nav-organize") < 0) {
+            throw new Error("incomplete shell");
+          }
+          const next = html.split("2026.09.05-133404").join(BUILD);
+          document.open();
+          document.write(next);
+          document.close();
+        })
+        .catch(() => tryUrl(i + 1));
+    };
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => tryUrl(0), { once: true });
+    } else tryUrl(0);
   }
-
-  function ensureBridgeAssets() {
-    addCss("./styles/bridge-shell.css?v=" + encodeURIComponent(BUILD));
-    const q = "?v=" + encodeURIComponent(BUILD);
-    addScript("./lib/bridge-token.js" + q)
-      .then(() => addScript("./lib/unified-bridge-bundle.js" + q))
-      .then(() => addScript("./lib/bridge-shell.js" + q));
-  }
-  ensureBridgeAssets();
-
-  function ensureAdbDialog() {
-    if (document.getElementById("adb-getprop-dlg")) return;
-    const dlg = document.createElement("dialog");
-    dlg.id = "adb-getprop-dlg";
-    dlg.className = "memo-dialog adb-getprop-dlg";
-    dlg.setAttribute("aria-label", "系统属性 getprop");
-    dlg.innerHTML =
-      '<div class="memo-dialog-body adb-getprop-dlg-body">' +
-      '<div class="label-row"><h2 class="subhead">系统属性</h2><span class="hint tight" id="adb-getprop-meta"></span></div>' +
-      '<div class="field-row adb-getprop-toolbar">' +
-      '<input id="adb-getprop-search" class="mono" type="search" placeholder="搜索 key 或 value…" autocomplete="off" spellcheck="false" />' +
-      '<button type="button" class="ghost-btn" id="adb-getprop-reload">刷新</button></div>' +
-      '<div class="channel-meta adb-info adb-getprop-list" id="adb-getprop-list" hidden></div>' +
-      '<p class="hint tight" id="adb-getprop-empty" hidden>无匹配项</p>' +
-      '<div class="btn-row tool-actions"><button type="button" class="primary-btn" id="adb-getprop-close">关闭</button></div></div>';
-    document.body.appendChild(dlg);
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", ensureAdbDialog, { once: true });
-  } else ensureAdbDialog();
+  restoreFullShell();
 
   try {
     if (!document.querySelector("script[data-kidsflash-nav]")) {

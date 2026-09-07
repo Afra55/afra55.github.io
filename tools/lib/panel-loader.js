@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const BUILD = window.TOOLS_BUILD || "2026.09.06-083100";
+  const BUILD = window.TOOLS_BUILD || "2026.09.07-114300";
   const mount = () => document.getElementById("workspace-panels");
 
   const htmlCache = new Map();
@@ -9,35 +9,34 @@
   const mounted = new Set();
   const inflight = new Map();
 
-  function withVersion(src) {
-    const url = new URL(src, document.baseURI || window.location.href);
-    url.searchParams.set("v", BUILD);
-    return url.href;
-  }
-
-  function fetchInit() {
+  function isForceFreshLoad() {
     try {
-      if (new URLSearchParams(location.search).has("_fresh")) return { cache: "no-store" };
-    } catch (_) {}
-    return { cache: "default" };
-  }
-
-  async function fetchText(url) {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 8000);
-    try {
-      const res = await fetch(withVersion(url), { ...fetchInit(), signal: ctrl.signal });
-      if (!res.ok) throw new Error(`加载失败：${url} (${res.status})`);
-      return res.text();
-    } finally {
-      clearTimeout(timer);
+      return new URLSearchParams(location.search).has("_fresh");
+    } catch (_) {
+      return false;
     }
   }
 
-  async function loadPanelHtml(toolId) {
+  function fetchInit(extra = {}) {
+    return isForceFreshLoad() ? { cache: "no-store", ...extra } : { cache: "default", ...extra };
+  }
+
+  function withVersion(src) {
+    const url = new URL(src, document.baseURI || window.location.href);
+    if (!url.searchParams.has("v")) url.searchParams.set("v", BUILD);
+    return url.pathname + url.search;
+  }
+
+  async function fetchText(url) {
+    const res = await fetch(withVersion(url), fetchInit());
+    if (!res.ok) throw new Error(`加载失败：${url} (${res.status})`);
+    return res.text();
+  }
+
+  function loadPanelHtml(toolId) {
     const id = String(toolId || "").trim();
     if (!id) throw new Error("panel id required");
-    if (htmlCache.has(id)) return htmlCache.get(id);
+    if (!isForceFreshLoad() && htmlCache.has(id)) return htmlCache.get(id);
     if (inflight.has(`html:${id}`)) return inflight.get(`html:${id}`);
     const promise = fetchText(`./panels/${id}.html`)
       .then((html) => {
@@ -51,7 +50,7 @@
 
   function injectStylesheet(id, href) {
     if ([...document.querySelectorAll("link[data-panel-css]")].some(
-      (l) => l.dataset.panelCss === id || l.href === href
+      (l) => l.dataset.panelCss === id || l.href === href || l.getAttribute("href") === href
     )) {
       cssLoaded.add(id);
       return;
@@ -67,22 +66,24 @@
   function ensurePanelCss(toolId) {
     const id = String(toolId || "").trim();
     if (!id || cssLoaded.has(id)) return;
-    if (/earn$/.test(id)) injectStylesheet("kidsflash-shared", withVersion("./styles/panels/kidsflash.css"));
+    if (/earn$/.test(id)) {
+      injectStylesheet("kidsflash-shared", withVersion("./styles/panels/kidsflash.css"));
+    }
     injectStylesheet(id, withVersion(`./styles/panels/${id}.css`));
   }
 
-  function mountPanel(toolId, html) {
+  function mountHtml(id, html) {
     const root = mount();
     if (!root) throw new Error("#workspace-panels missing");
-    const id = String(toolId || "").trim();
-    let panel = document.getElementById(id);
-    if (!panel) {
-      const wrap = document.createElement("div");
-      wrap.innerHTML = html.trim();
-      panel = wrap.firstElementChild;
-      if (!panel || panel.id !== id) throw new Error(`panel markup invalid: ${id}`);
-      root.appendChild(panel);
+    if (document.getElementById(id)) {
+      mounted.add(id);
+      return document.getElementById(id);
     }
+    const wrap = document.createElement("div");
+    wrap.innerHTML = html.trim();
+    const panel = wrap.firstElementChild;
+    if (!panel || panel.id !== id) throw new Error(`panel ${id} markup invalid`);
+    root.appendChild(panel);
     mounted.add(id);
     try { window.DevToolsExtraBind?.bind?.(id); } catch (_) {}
     try { window.dispatchEvent(new CustomEvent("devtools:panel-mounted", { detail: { id } })); } catch (_) {}
@@ -93,40 +94,23 @@
     const id = String(toolId || "").trim();
     if (!id) return null;
     ensurePanelCss(id);
-    if (mounted.has(id) || document.getElementById(id)) {
-      mounted.add(id);
+    if (mounted.has(id)) {
+      try { window.DevToolsExtraBind?.bind?.(id); } catch (_) {}
+      try { window.dispatchEvent(new CustomEvent("devtools:panel-mounted", { detail: { id } })); } catch (_) {}
       return document.getElementById(id);
     }
     const html = await loadPanelHtml(id);
-    return mountPanel(id, html);
+    return mountHtml(id, html);
   }
 
   const bootPromise = (async () => {
     const id = document.documentElement.dataset.bootPanel || "timestamp";
     try {
-      document.documentElement.dataset.panelLoading = id;
       await ensure(id);
     } catch (err) {
-      console.error("boot panel load failed", id, err);
-    } finally {
-      delete document.documentElement.dataset.panelLoading;
+      console.warn("boot panel failed", id, err);
     }
   })();
 
-  window.DevToolsPanels = {
-    BUILD,
-    ensure,
-    bootReady: bootPromise,
-    isMounted: (id) => mounted.has(String(id || "").trim()) || Boolean(document.getElementById(id)),
-    clearSessionCache() {
-      htmlCache.clear();
-      cssLoaded.clear();
-      mounted.clear();
-      inflight.clear();
-    },
-    isForceFreshLoad() {
-      try { return new URLSearchParams(location.search).has("_fresh"); } catch (_) { return false; }
-    },
-    prefetchHtml: (toolId) => loadPanelHtml(toolId).catch(() => null),
-  };
+  window.DevToolsPanelLoader = { ensure, bootPromise, withVersion };
 })();
