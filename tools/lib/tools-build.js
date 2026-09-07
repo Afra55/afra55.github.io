@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const BUILD = "2026.09.07-114300";
+  const BUILD = "2026.09.07-114700";
   window.TOOLS_BUILD = BUILD;
   window.TOOLS_VERSION = BUILD;
 
@@ -16,43 +16,44 @@
 
   try { localStorage.setItem("devtools-seen-build-v1", BUILD); } catch (_) {}
 
-  function shellComplete() {
-    return !!(
-      document.getElementById("muyu-fs") &&
-      document.getElementById("nav-organize") &&
-      document.getElementById("vsplit-fs") &&
-      document.getElementById("countdown-fs") &&
-      document.getElementById("ruler-fs")
-    );
+  function injectHosts() {
+    if (document.getElementById("muyu-fs") && document.getElementById("nav-organize") && document.getElementById("vsplit-fs")) return;
+    fetch("./lib/shell-hosts.html?v=" + encodeURIComponent(BUILD), { cache: "no-store" })
+      .then((r) => (r.ok ? r.text() : Promise.reject()))
+      .then((html) => {
+        const box = document.createElement("div");
+        box.innerHTML = html;
+        [...box.children].forEach((node) => {
+          const id = node.id;
+          if (id && document.getElementById(id)) return;
+          document.body.appendChild(node);
+        });
+      })
+      .catch(() => {});
   }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", injectHosts, { once: true });
+  } else injectHosts();
 
-  function restoreFullShell() {
-    if (shellComplete() || window.__devtoolsShellRestore) return;
-    window.__devtoolsShellRestore = true;
-    const urls = [
-      "https://cdn.jsdelivr.net/gh/Afra55/Afra55.github.io@42a234664a0b5bac6e54bbc3eb4c8c5aff3811b5/tools/index.html",
-      "https://raw.githubusercontent.com/Afra55/Afra55.github.io/42a234664a0b5bac6e54bbc3eb4c8c5aff3811b5/tools/index.html",
-    ];
-    const tryUrl = (i) => {
-      if (i >= urls.length) return;
-      fetch(urls[i], { cache: "no-store" })
-        .then((r) => (r.ok ? r.text() : Promise.reject(new Error("bad"))))
-        .then((html) => {
-          if (!html || html.indexOf("muyu-fs-stage") < 0 || html.indexOf("nav-organize") < 0) {
-            throw new Error("incomplete shell");
-          }
-          const next = html.split("2026.09.05-133404").join(BUILD);
-          document.open();
-          document.write(next);
-          document.close();
-        })
-        .catch(() => tryUrl(i + 1));
-    };
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () => tryUrl(0), { once: true });
-    } else tryUrl(0);
+  function addCss(href) {
+    const file = href.split("?")[0];
+    if (document.querySelector(`link[href*="${file}"]`)) return;
+    const l = document.createElement("link");
+    l.rel = "stylesheet";
+    l.href = href;
+    document.head.appendChild(l);
   }
-  restoreFullShell();
+  function addScript(src) {
+    const file = src.split("?")[0];
+    if (document.querySelector(`script[src*="${file}"]`)) return;
+    const s = document.createElement("script");
+    s.src = src;
+    document.head.appendChild(s);
+  }
+  addCss("./styles/bridge-shell.css?v=" + encodeURIComponent(BUILD));
+  addScript("./lib/bridge-token.js?v=" + encodeURIComponent(BUILD));
+  addScript("./lib/unified-bridge-bundle.js?v=" + encodeURIComponent(BUILD));
+  addScript("./lib/bridge-shell.js?v=" + encodeURIComponent(BUILD));
 
   try {
     if (!document.querySelector("script[data-kidsflash-nav]")) {
