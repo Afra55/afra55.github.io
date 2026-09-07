@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const BUILD = window.TOOLS_BUILD || "2026.09.07-114300";
+  const BUILD = window.TOOLS_BUILD || "2026.09.07-115500";
   const mount = () => document.getElementById("workspace-panels");
 
   const htmlCache = new Map();
@@ -23,8 +23,8 @@
 
   function withVersion(src) {
     const url = new URL(src, document.baseURI || window.location.href);
-    if (!url.searchParams.has("v")) url.searchParams.set("v", BUILD);
-    return url.pathname + url.search;
+    url.searchParams.set("v", BUILD);
+    return url.href;
   }
 
   async function fetchText(url) {
@@ -33,7 +33,7 @@
     return res.text();
   }
 
-  function loadPanelHtml(toolId) {
+  async function loadPanelHtml(toolId) {
     const id = String(toolId || "").trim();
     if (!id) throw new Error("panel id required");
     if (!isForceFreshLoad() && htmlCache.has(id)) return htmlCache.get(id);
@@ -72,22 +72,28 @@
     injectStylesheet(id, withVersion(`./styles/panels/${id}.css`));
   }
 
-  function mountHtml(id, html) {
+  function mountPanel(toolId, html) {
     const root = mount();
     if (!root) throw new Error("#workspace-panels missing");
-    if (document.getElementById(id)) {
-      mounted.add(id);
-      return document.getElementById(id);
+    const id = String(toolId || "").trim();
+    let panel = document.getElementById(id);
+    if (!panel) {
+      const wrap = document.createElement("div");
+      wrap.innerHTML = html.trim();
+      panel = wrap.firstElementChild;
+      if (!panel || panel.id !== id) throw new Error(`panel markup invalid: ${id}`);
+      root.appendChild(panel);
     }
-    const wrap = document.createElement("div");
-    wrap.innerHTML = html.trim();
-    const panel = wrap.firstElementChild;
-    if (!panel || panel.id !== id) throw new Error(`panel ${id} markup invalid`);
-    root.appendChild(panel);
     mounted.add(id);
+    notifyExtraBind(id);
+    return panel;
+  }
+
+  function notifyExtraBind(panelId) {
+    const id = String(panelId || "").trim();
+    if (!id) return;
     try { window.DevToolsExtraBind?.bind?.(id); } catch (_) {}
     try { window.dispatchEvent(new CustomEvent("devtools:panel-mounted", { detail: { id } })); } catch (_) {}
-    return panel;
   }
 
   async function ensure(toolId) {
@@ -95,22 +101,50 @@
     if (!id) return null;
     ensurePanelCss(id);
     if (mounted.has(id)) {
-      try { window.DevToolsExtraBind?.bind?.(id); } catch (_) {}
-      try { window.dispatchEvent(new CustomEvent("devtools:panel-mounted", { detail: { id } })); } catch (_) {}
+      notifyExtraBind(id);
       return document.getElementById(id);
     }
     const html = await loadPanelHtml(id);
-    return mountHtml(id, html);
+    return mountPanel(id, html);
+  }
+
+  function bootPanelId() {
+    try {
+      return document.documentElement.dataset.bootPanel || "timestamp";
+    } catch (_) {
+      return "timestamp";
+    }
   }
 
   const bootPromise = (async () => {
-    const id = document.documentElement.dataset.bootPanel || "timestamp";
+    const id = bootPanelId();
     try {
+      document.documentElement.dataset.panelLoading = id;
       await ensure(id);
     } catch (err) {
-      console.warn("boot panel failed", id, err);
+      console.error("boot panel load failed", id, err);
+    } finally {
+      delete document.documentElement.dataset.panelLoading;
     }
   })();
 
-  window.DevToolsPanelLoader = { ensure, bootPromise, withVersion };
+  function clearSessionCache() {
+    htmlCache.clear();
+    cssLoaded.clear();
+    mounted.clear();
+    inflight.clear();
+  }
+
+  if (isForceFreshLoad()) clearSessionCache();
+
+  window.DevToolsPanels = {
+    BUILD,
+    ensure,
+    bootReady: bootPromise,
+    isMounted: (id) => mounted.has(String(id || "").trim()),
+    clearSessionCache,
+    isForceFreshLoad,
+    prefetchHtml: (toolId) => loadPanelHtml(toolId).catch(() => null),
+  };
+  window.DevToolsPanelLoader = window.DevToolsPanels;
 })();
