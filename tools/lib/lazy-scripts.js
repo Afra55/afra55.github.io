@@ -136,13 +136,14 @@
     adb: "./extra-panels/adb.js",
     vsplit: "./extra-panels/v2g-suite.js",
     vbb: "./extra-panels/v2g-suite.js",
+    interpolator: "./extra-panels/interpolator.js",
   };
 
   const EXTRA_PANEL_IDS = new Set([
     "timediff", "color", "url", "query", "uuid", "hash", "text", "caseconv", "coord",
     "yaml", "imgb64", "qrcode", "cron", "units", "sharecard", "numbase", "markdown",
     "eyedropper", "password", "gifmaker", "gifx", "v2g", "gifbb", "gifc", "gife", "gifm",
-    "adb", "vsplit", "vbb",
+    "adb", "vsplit", "vbb", "interpolator",
   ]);
 
   const EXTRA_MEDIA_TOOLS = new Set([

@@ -203,6 +203,11 @@
       "bytes": 4994
     },
     {
+      "id": "interpolator",
+      "file": "./panels/interpolator.html",
+      "bytes": 5226
+    },
+    {
       "id": "ipgeo",
       "file": "./panels/ipgeo.html",
       "bytes": 2843
