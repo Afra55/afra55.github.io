@@ -166,6 +166,15 @@
    */
   async function resolveItemImage(item, opts = {}) {
     if (!item) return { url: "", credit: "", fromCache: false };
+    // 本地内置图：同源静态文件，直接使用，无需跨域/缓存/探测
+    if (item.local) {
+      if (typeof opts.onPreview === "function") {
+        try {
+          opts.onPreview({ url: item.local });
+        } catch (_) {}
+      }
+      return { url: item.local, credit: item.credit || "本站内置图", fromCache: false, local: true };
+    }
     const ns = opts.namespace || "kids";
     const cacheKey = `${ns}:${item.id}`;
     const thumbKey = `${cacheKey}:thumb`;
