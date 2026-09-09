@@ -146,6 +146,8 @@
   let editMode = "trim"; // trim | crop
   let lastSeekAt = 0;
   let pendingSeek = null;
+  let scrubSeekWanted = null;
+  let scrubSeekInflight = false;
   let playheadRaf = 0;
   let previewScrub = null;
   let exportQuality = "fast"; // fast | hq
@@ -794,6 +796,32 @@
     pendingSeek = next;
     clearTimeout(seekTo._t);
     seekTo._t = setTimeout(apply, 42);
+  }
+
+  // 预览拖动：串行等 seeked 再应用最新目标（对齐 vplay 的 pumpScrubSeek），
+  // 避免拖动时密集 currentTime 写入导致画面不更新，预览帧与播放帧保持一致。
+  function pumpPreviewScrubSeek() {
+    if (!video?.src || scrubSeekInflight) return;
+    if (scrubSeekWanted == null) return;
+    const t = Math.max(0, Math.min(duration || 0, scrubSeekWanted));
+    scrubSeekWanted = null;
+    if (Math.abs((Number(video.currentTime) || 0) - t) < 0.03 && !video.seeking) {
+      paintTimeline();
+      updateLabels();
+      return;
+    }
+    scrubSeekInflight = true;
+    const onSeeked = () => {
+      video.removeEventListener("seeked", onSeeked);
+      scrubSeekInflight = false;
+      paintTimeline();
+      updateLabels();
+      pumpPreviewScrubSeek();
+    };
+    video.addEventListener("seeked", onSeeked, { once: true });
+    try {
+      video.currentTime = t;
+    } catch (_) {}
   }
 
   function snapTime(t, which) {
@@ -1633,7 +1661,9 @@
     const geom = previewWrap.getBoundingClientRect();
     const span = Math.max(MIN_SPAN, endSec - startSec);
     const delta = (dx / Math.max(1, geom.width)) * span;
-    seekTo(previewScrub.startT + delta, { immediate: true });
+    const target = clamp(previewScrub.startT + delta, startSec, Math.max(startSec, endSec - 0.04));
+    scrubSeekWanted = target;
+    pumpPreviewScrubSeek();
   });
   previewWrap?.addEventListener("pointerup", (e) => {
     if (!previewScrub || previewScrub.pointerId !== e.pointerId) return;

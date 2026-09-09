@@ -38,7 +38,7 @@ const ALLOWED_ORIGINS = new Set(
     .filter(Boolean)
 );
 
-const BRIDGE_VERSION = "0.9.22";
+const BRIDGE_VERSION = "0.9.23";
 const INSTANCE_LOCK = path.join(__dirname, ".bridge-instance.lock");
 let ACTIVE_PORT = PORT;
 const scrcpyMirror = require("./scrcpy-mirror");
@@ -3336,6 +3336,49 @@ async function screencapPng(serial) {
   return data;
 }
 
+async function settleDeviceFlush(serial) {
+  // screenrecord 收到 SIGINT 后仍需时间写 moov 并 flush 到磁盘，
+  // 过早 pull 会拿到 moov 未写完的残缺文件。sync 强制落盘。
+  await new Promise((r) => setTimeout(r, 1600));
+  try {
+    await adbSerial(serial, ["shell", "sync"], { timeout: 10000 });
+  } catch {
+    /* ignore */
+  }
+  await new Promise((r) => setTimeout(r, 600));
+}
+
+async function remuxFaststart(local) {
+  // 尽力修复：本机有 ffmpeg 时用 -c copy 重封装 +faststart，
+  // 让拉到可能缺 moov / 未 faststart 的文件尽量可播放；失败保留原文件。
+  try {
+    const bin = process.env.FFMPEG_PATH || "ffmpeg";
+    const out = `${local}.fixed.mp4`;
+    const child = spawn(bin, ["-y", "-v", "error", "-i", local, "-c", "copy", "-movflags", "+faststart", out], {
+      stdio: ["ignore", "ignore", "ignore"],
+    });
+    await new Promise((resolve) => {
+      child.on("close", resolve);
+      child.on("error", resolve);
+    });
+    if (fs.existsSync(out)) {
+      const st = fs.statSync(out);
+      if (st.size > 0) {
+        fs.renameSync(out, local);
+        return true;
+      }
+    }
+    try {
+      fs.unlinkSync(out);
+    } catch {
+      /* ignore */
+    }
+  } catch {
+    /* ignore */
+  }
+  return false;
+}
+
 async function pullRecordArtifact(job, serial, remote) {
   const local = tempName("rec", `${serial}.mp4`);
   await adbSerial(serial, ["pull", remote, local], { timeout: 300000 });
@@ -3354,10 +3397,12 @@ async function pullRecordArtifact(job, serial, remote) {
     }
     return null;
   }
+  await remuxFaststart(local);
+  const fixedStat = fs.statSync(local);
   const art = {
     name: `${serial}-screenrecord.mp4`,
     path: local,
-    size: stat.size,
+    size: fixedStat.size,
     serial,
     mime: "video/mp4",
   };
@@ -3440,8 +3485,8 @@ async function runRecordJob(job, serial, seconds) {
 
     if (job.cancelRequested) {
       touchJob(job, { progress: 92, message: "取消中，尝试拉取部分录屏…" });
-      // brief settle so screenrecord flushes
-      await new Promise((r) => setTimeout(r, 800));
+      // brief settle so screenrecord flushes (sync 落盘，降低拉到残缺 moov 的概率)
+      await settleDeviceFlush(serial);
       try {
         const art = await pullRecordArtifact(job, serial, remote);
         if (job.items[0]) {
