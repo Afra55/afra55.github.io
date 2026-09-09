@@ -15,7 +15,7 @@
     encodeAnimatedWebpFromStillFrames, isAutoPackZipEnabled, setAutoPackZipEnabled, syncAutoPackZipToggles,
     bindAutoPackZipToggles, canEncodeStillWebp, gifQualityToWebpQuality, gifQualityToMaxColors,
     terminateFfmpegInstance, paintFfmpegWarmHint, prewarmFfmpegEngine, scheduleFfmpegPrewarm,
-    TOOLS_VERSION, GIF_TOOL_VERSION,
+    TOOLS_VERSION, GIF_TOOL_VERSION, compressExistingGifToBlackbox,
     AUTO_PACK_ZIP_KEY,
   } = M;
   const FFMPEG_SEG_FILE_BYTES = M.FFMPEG_SEG_FILE_BYTES ?? 48 * 1024 * 1024;

@@ -15,7 +15,7 @@
     encodeAnimatedWebpFromStillFrames, isAutoPackZipEnabled, setAutoPackZipEnabled, syncAutoPackZipToggles,
     bindAutoPackZipToggles, canEncodeStillWebp, gifQualityToWebpQuality, gifQualityToMaxColors,
     terminateFfmpegInstance, paintFfmpegWarmHint, prewarmFfmpegEngine, TOOLS_VERSION, GIF_TOOL_VERSION,
-    AUTO_PACK_ZIP_KEY,
+    AUTO_PACK_ZIP_KEY, blackboxUseMaxBytes, compressExistingGifToBlackbox,
   } = M;
   const formatLocalPickMeta = K.formatLocalPickMeta;
   const attachLocalVideoPreview = K.attachLocalVideoPreview;
@@ -97,10 +97,6 @@
         if (pctEl) pctEl.textContent = status === "pending" ? "—" : `${pct}%`;
       }
   
-      async function compressExistingGifToBlackbox(blob, onProgress, shouldAbort) {
-        return M.compressExistingGifToBlackbox(blob, onProgress, shouldAbort);
-      }
-
       function setGifbbButtons() {
         const done = gifbbItems.filter((it) => it.outBlob).length;
         if (gifbbRun) gifbbRun.disabled = gifbbItems.length === 0 || gifbbBusy;
@@ -252,7 +248,7 @@
             renderGifbbList();
             try {
               const before = item.file.size;
-              if (before <= M.blackboxUseMaxBytes()) {
+              if (before <= blackboxUseMaxBytes()) {
                 item.outBlob = item.file;
                 item.status = "skip";
                 item.note = `已符合黑盒 · ${formatKb(before)} · 未压缩`;
