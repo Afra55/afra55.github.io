@@ -12,6 +12,12 @@
           <button type="button" class="ghost-btn" id="gifbb-clear">清空</button>
           <button type="button" class="ghost-btn" id="gifbb-abort" hidden>取消</button>
         </div>
+        <div class="field-row" style="flex-wrap:wrap;margin-top:0.5rem;align-items:center">
+          <label class="flag" for="gifbb-allow-scale">
+            <input type="checkbox" id="gifbb-allow-scale" checked />
+            允许缩小尺寸/画质以保证压进 6MB（关闭则保持原始尺寸）
+          </label>
+        </div>
         <p class="hint" id="gifbb-meta">未选择 GIF</p>
         <div class="gif-frame-list" id="gifbb-list" hidden aria-live="polite"></div>
         <p class="error" id="gifbb-error" hidden></p>

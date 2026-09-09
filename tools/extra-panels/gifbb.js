@@ -367,6 +367,22 @@
       gifbbZip?.addEventListener("click", () => {
         packGifbbResults().catch((err) => setError(gifbbError, err.message || String(err)));
       });
+      const allowScaleEl = $("#gifbb-allow-scale");
+      if (allowScaleEl) {
+        try {
+          allowScaleEl.checked = localStorage.getItem("devtools-gifbb-scale-v1") !== "0";
+        } catch (_) {}
+        allowScaleEl.addEventListener("change", () => {
+          try {
+            localStorage.setItem("devtools-gifbb-scale-v1", allowScaleEl.checked ? "1" : "0");
+          } catch (_) {}
+          if (gifbbMeta) {
+            gifbbMeta.textContent = allowScaleEl.checked
+              ? "已开启：必要时缩小尺寸/画质以保证压进 6MB"
+              : "已关闭：保持原始尺寸，仅降色/压缩，可能无法压进 6MB";
+          }
+        });
+      }
       gifbbClear?.addEventListener("click", clearGifbb);
       gifbbAbort?.addEventListener("click", () => {
         abortGifbb = true;

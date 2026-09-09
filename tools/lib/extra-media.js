@@ -1023,12 +1023,19 @@
     if (blob.size <= MAX) {
       return { blob, skipped: true, compressRounds: 0, ok: true, grew: false };
     }
+    // 允许缩放：用户可关（本地记住），关掉则只降色不缩尺寸
+    let allowScale = true;
+    try {
+      allowScale = localStorage.getItem("devtools-gifbb-scale-v1") !== "0";
+    } catch (_) {}
+    // 不缩放时最多走前 4 档（lossy + colors，无 --scale）
+    const maxRounds = allowScale ? blackboxMaxRounds() : 4;
     // 始终保留「最小」结果：单轮 gifsicle 可能因源调色板/透明/去抖动反而变大，
     // 绝不能把变大的文件当作结果返回。
     let best = blob;
     let compressRounds = 0;
     let noGainStreak = 0;
-    for (let round = 1; round <= blackboxMaxRounds(); round++) {
+    for (let round = 1; round <= maxRounds; round++) {
       if (isAborted()) throw new Error("已取消");
       const plan = buildBlackboxHardCompressArgs(round);
       const out = await compressGifBlob(
