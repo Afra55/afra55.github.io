@@ -253,7 +253,7 @@
     return [...document.scripts].some((s) => {
       try {
         const attr = s.getAttribute("src") || "";
-        return withVersion(attr) === key || s.dataset.devtoolsLoaded === "1";
+        return withVersion(attr) === key;
       } catch (_) {
         return false;
       }
@@ -342,7 +342,19 @@
 
   async function loadExtraCore(onProgress, { media = false } = {}) {
     if (window.__devtoolsExtraCore && (!media || window.DevToolsExtraMedia)) return;
-    if (extraCorePromise) return extraCorePromise;
+    if (extraCorePromise) {
+      return extraCorePromise.then(async () => {
+        // 首次以非 media 路径加载后再次需要 media（如 adb / gifmaker 等）：
+        // 补齐媒体核心，避免媒体工具因缺 DevToolsExtraMedia 而卡住。
+        if (media && !window.DevToolsExtraMedia) {
+          onProgress?.(0.48, "加载媒体编码核心…");
+          if (!window.DevToolsTemp) await loadScript("./temp.js");
+          await loadScript("./lib/oss-deps.js");
+          await loadScript("./lib/extra-media.js");
+          onProgress?.(0.62, "媒体核心已就绪");
+        }
+      });
+    }
     extraCorePromise = (async () => {
       onProgress?.(0.1, "初始化面板绑定…");
       if (!window.DevToolsExtraBind) await loadScript("./lib/extra-bind.js");

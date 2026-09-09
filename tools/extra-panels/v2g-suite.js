@@ -2013,7 +2013,8 @@
       function syncClipProgressDom(box, job) {
         if (!box) return;
         const status = job?.jobStatus || "";
-        const show = status === "pending" || status === "running" || status === "done" || status === "error";
+        // 生成成功后隐藏进度条，只保留文案信息（时长/宽高/尺寸）
+        const show = status === "pending" || status === "running" || status === "error";
         box.hidden = !show;
         if (!show) return;
         box.dataset.status = status;
@@ -6778,9 +6779,9 @@
           let compressRounds = 0;
           if (blob.size > V2G_BLACKBOX_MAX_BYTES) {
             setVbbProgress(true, 0.58, "超限压缩", { busy: true });
-            const compressed = await compressExistingGifToBlackbox(blob, (ratio, text) =>
+            const compressed = await M.compressExistingGifToBlackbox(blob, (ratio, text) =>
               setVbbProgress(true, 0.58 + ratio * 0.4, "压缩", { sub: vbbTickerLine(text), busy: ratio < 1 })
-            );
+            , () => abortVbb);
             blob = compressed.blob;
             compressRounds = compressed.compressRounds || 0;
             if (!compressed.ok) {

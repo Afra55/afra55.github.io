@@ -447,14 +447,6 @@
   renderFromAhexInput();
   }
 
-  function initBase64Panel() {
-  // ---- Base64 ----
-  const b64Text = $("#b64-text");
-  if (!b64Text) return;
-  const b64Encoded = $("#b64-encoded");
-  const b64Error = $("#b64-error");
-  const b64Meta = $("#b64-meta");
-
   function setToolError(el, msg) {
     if (!msg) {
       el.hidden = true;
@@ -464,6 +456,14 @@
     el.hidden = false;
     el.textContent = msg;
   }
+
+  function initBase64Panel() {
+  // ---- Base64 ----
+  const b64Text = $("#b64-text");
+  if (!b64Text) return;
+  const b64Encoded = $("#b64-encoded");
+  const b64Error = $("#b64-error");
+  const b64Meta = $("#b64-meta");
 
   function bytesToBase64(bytes) {
     let binary = "";

@@ -59,6 +59,20 @@
       url: "https://github.com/ayghri/i-have-adhd",
       tags: ["ai", "skill", "github"],
     },
+    {
+      id: "strix",
+      title: "Strix",
+      desc: "开源 AI 渗透测试工具：自主 AI 黑客动态运行你的代码，发现并验证漏洞（真实 PoC），多智能体协同；需 Docker + LLM 密钥（Apache-2.0）。仅限已授权目标。",
+      url: "https://github.com/usestrix/strix",
+      tags: ["ai", "安全", "渗透", "docker", "github"],
+    },
+    {
+      id: "codebase-memory-mcp",
+      title: "Codebase Memory MCP",
+      desc: "本地代码智能引擎（原生可执行文件）：tree-sitter 建知识图谱，函数/调用链/路由/死代码/语义搜索等 15 个 MCP 工具；100% 本地、无需 API key，支持多个编码 Agent。",
+      url: "https://github.com/DeusData/codebase-memory-mcp",
+      tags: ["ai", "mcp", "代码库", "graph", "本地"],
+    },
   ];
 
   function $(sel, root) {

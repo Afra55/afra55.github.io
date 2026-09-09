@@ -1009,6 +1009,47 @@
   }
 
 
+  function blackboxUseMaxBytes() {
+    return 6 * 1024 * 1024;
+  }
+  function blackboxMaxRounds() {
+    return 10;
+  }
+
+  async function compressExistingGifToBlackbox(blob, onProgress, shouldAbort) {
+    const MAX = blackboxUseMaxBytes();
+    if (!blob) throw new Error("没有可压缩的 GIF");
+    const isAborted = typeof shouldAbort === "function" ? shouldAbort : () => false;
+    if (blob.size <= MAX) {
+      return { blob, skipped: true, compressRounds: 0, ok: true };
+    }
+    let candidate = blob;
+    let compressRounds = 0;
+    for (let round = 1; round <= blackboxMaxRounds(); round++) {
+      if (isAborted()) throw new Error("已取消");
+      const before = candidate.size;
+      const plan = buildBlackboxHardCompressArgs(round);
+      const out = await compressGifBlob(
+        candidate,
+        "standard",
+        (ratio, text) => onProgress?.(ratio, text || `第 ${round} 轮`),
+        { round, plan }
+      );
+      compressRounds = round;
+      candidate = out;
+      if (out.size <= MAX) {
+        return { blob: out, skipped: false, compressRounds, ok: true };
+      }
+      if (out.size >= before * 0.99) break;
+    }
+    return {
+      blob: candidate,
+      skipped: false,
+      compressRounds,
+      ok: candidate.size <= MAX,
+    };
+  }
+
   window.DevToolsExtraMedia = {
     isAutoPackZipEnabled, setAutoPackZipEnabled, syncAutoPackZipToggles, bindAutoPackZipToggles,
     canEncodeStillWebp, gifQualityToWebpQuality, gifQualityToMaxColors, resolveFfmpegVendorBase,
@@ -1021,7 +1062,8 @@
     paintToolsVersion, loadGifsicle, buildGifCompressArgs, buildBlackboxSoftCompressArgs,
     buildBlackboxHardCompressArgs, gifCompressSummary, readGifWatermarkOptions,
     drawGifTextWatermark, compressGifBlob, mergeGifBlobs, TOOLS_VERSION, GIF_TOOL_VERSION,
-    AUTO_PACK_ZIP_KEY, FFMPEG_SEG_FILE_BYTES,
+    AUTO_PACK_ZIP_KEY, FFMPEG_SEG_FILE_BYTES, blackboxUseMaxBytes, blackboxMaxRounds,
+    compressExistingGifToBlackbox,
     formatLocalPickMeta: K.formatLocalPickMeta,
     attachLocalVideoPreview: K.attachLocalVideoPreview,
     waitVideoMetadata: K.waitVideoMetadata,

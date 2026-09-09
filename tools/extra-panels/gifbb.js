@@ -97,38 +97,10 @@
         if (pctEl) pctEl.textContent = status === "pending" ? "—" : `${pct}%`;
       }
   
-      async function compressExistingGifToBlackbox(blob, onProgress) {
-        if (!blob) throw new Error("没有可压缩的 GIF");
-        if (blob.size <= V2G_BLACKBOX_MAX_BYTES) {
-          return { blob, skipped: true, compressRounds: 0, ok: true };
-        }
-        let candidate = blob;
-        let compressRounds = 0;
-        for (let round = 1; round <= V2G_BLACKBOX_MAX_COMPRESS_ROUNDS; round++) {
-          if (abortGifbb || abortVbb) throw new Error("已取消");
-          const before = candidate.size;
-          const plan = buildBlackboxHardCompressArgs(round);
-          const out = await compressGifBlob(
-            candidate,
-            "standard",
-            (ratio, text) => onProgress?.(ratio, text || `第 ${round} 轮`),
-            { round, plan }
-          );
-          compressRounds = round;
-          candidate = out;
-          if (out.size <= V2G_BLACKBOX_MAX_BYTES) {
-            return { blob: out, skipped: false, compressRounds, ok: true };
-          }
-          if (out.size >= before * 0.99) break;
-        }
-        return {
-          blob: candidate,
-          skipped: false,
-          compressRounds,
-          ok: candidate.size <= V2G_BLACKBOX_MAX_BYTES,
-        };
+      async function compressExistingGifToBlackbox(blob, onProgress, shouldAbort) {
+        return M.compressExistingGifToBlackbox(blob, onProgress, shouldAbort);
       }
-  
+
       function setGifbbButtons() {
         const done = gifbbItems.filter((it) => it.outBlob).length;
         if (gifbbRun) gifbbRun.disabled = gifbbItems.length === 0 || gifbbBusy;
@@ -280,7 +252,7 @@
             renderGifbbList();
             try {
               const before = item.file.size;
-              if (before <= V2G_BLACKBOX_MAX_BYTES) {
+              if (before <= M.blackboxUseMaxBytes()) {
                 item.outBlob = item.file;
                 item.status = "skip";
                 item.note = `已符合黑盒 · ${formatKb(before)} · 未压缩`;
@@ -291,7 +263,7 @@
                   item.jobProgress = Math.max(0, Math.min(1, Number(ratio) || 0));
                   item.jobText = text || "压缩中…";
                   renderGifbbList();
-                });
+                }, () => abortGifbb);
                 item.outBlob = result.blob;
                 item.status = result.ok ? "done" : "warn";
                 const after = result.blob.size;

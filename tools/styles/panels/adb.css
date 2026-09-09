@@ -48,6 +48,23 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 22%, transparent);
 }
 
+.adb-stop-btn {
+  color: var(--danger, #ff6b7a);
+  border-color: color-mix(in srgb, var(--danger, #ff6b7a) 45%, var(--line));
+}
+.adb-stop-btn:hover,
+.adb-stop-btn:focus-visible {
+  background: color-mix(in srgb, var(--danger, #ff6b7a) 12%, transparent);
+  color: var(--danger, #ff6b7a);
+}
+
+.adb-media-video {
+  max-width: 100%;
+  max-height: 360px;
+  border-radius: 10px;
+  background: #000;
+}
+
 .adb-layout {
   display: grid;
   grid-template-columns: minmax(180px, 240px) 1fr;
@@ -330,7 +347,7 @@
   top: 0;
   z-index: 1;
   border-top: 0;
-  background: rgba(10, 16, 28, 0.96);
+  background: var(--control-bg-strong, var(--nav-bg-solid, rgba(10, 16, 28, 0.96)));
   color: var(--muted);
   font-size: 0.78rem;
 }
@@ -547,8 +564,8 @@
   padding: 0.3rem;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: rgba(12, 18, 30, 0.96);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  background: var(--panel-strong, rgba(12, 18, 30, 0.96));
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--bg-0) 60%, #000);
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -577,7 +594,7 @@
 }
 
 .adb-fs-ctx-item.is-danger {
-  color: #fca5a5;
+  color: var(--danger, #fca5a5);
 }
 
 .adb-fs-actions {

@@ -4039,6 +4039,21 @@
     renderAll();
   }
 
+  function clearTempItems() {
+    const tempIds = (state.index.items || []).filter((it) => isTempItem(it)).map((it) => it.id);
+    if (!tempIds.length) {
+      toast("没有临时条目");
+      return;
+    }
+    const days = Number(state.tempDays) || 7;
+    const list = (state.index.items || []).filter((it) => isTempItem(it));
+    const msg = `确认清理 ${tempIds.length} 条临时条目吗？\n临时条目保留 ${days} 天（超时自动清除），清临时会立即删除仍有效的临时条目。`;
+    if (!window.confirm(msg)) return;
+    deleteItems(tempIds, { confirm: false })
+      .then(() => toast(`已清理 ${tempIds.length} 条临时条目`))
+      .catch((err) => setError(memoError, err.message || String(err)));
+  }
+
   function canClipboardCopy(item) {
     return item?.type === "text" || item?.type === "image" || item?.type === "gif";
   }
@@ -6117,6 +6132,8 @@
     renderItems();
     toast("已取消全部选中");
   });
+  $("#memo-clear-temp")?.addEventListener("click", () => clearTempItems());
+  $("#memo-scroll-top")?.addEventListener("click", () => memoScrollToY(0, { behavior: "smooth" }));
   $("#memo-temp-filter")?.addEventListener("click", () => toggleTempFilter());
   $("#memo-archive-filter")?.addEventListener("click", () => toggleArchiveFilter());
   $("#memo-toggle-day")?.addEventListener("click", () => {

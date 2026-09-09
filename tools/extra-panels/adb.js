@@ -1929,8 +1929,9 @@
           )
           .join("");
         const running = job.status === "running" || job.status === "pending" || job.status === "queued";
+        const isRecord = job.type === "record";
         const cancelBtn = running
-          ? `<button type="button" class="ghost-btn" data-adb-job-cancel="${escapeHtml(job.id)}">取消</button>`
+          ? `<button type="button" class="ghost-btn${isRecord ? " adb-stop-btn" : ""}" data-adb-job-cancel="${escapeHtml(job.id)}">${isRecord ? "停止" : "取消"}</button>`
           : "";
         const zipBtn =
           (job.artifacts || []).length > 0
@@ -2002,29 +2003,36 @@
         }
         const preview = $("#adb-media-preview");
         if (!preview) return;
+        const isDone = (j) => j.status === "done" || j.status === "completed" || j.status === "success";
         const shot = (jobs || []).find(
-          (j) =>
-            j.type === "screenshot" &&
-            (j.status === "done" || j.status === "completed" || j.status === "success") &&
-            (j.artifacts || []).some((a) => /\.png$/i.test(a.name || ""))
+          (j) => j.type === "screenshot" && isDone(j) && (j.artifacts || []).some((a) => /\.png$/i.test(a.name || ""))
         );
-        if (!shot) return;
-        const art = (shot.artifacts || []).find((a) => /\.png$/i.test(a.name || ""));
+        const rec = (jobs || []).find(
+          (j) => j.type === "record" && isDone(j) && (j.artifacts || []).some((a) => /\.mp4$/i.test(a.name || ""))
+        );
+        const target = rec || shot;
+        if (!target) return;
+        const isRecord = !!rec;
+        const re = isRecord ? /\.mp4$/i : /\.png$/i;
+        const art = (target.artifacts || []).find((a) => re.test(a.name || ""));
         if (!art) return;
-        if (preview.dataset.adbPreviewJob === shot.id && preview.dataset.adbPreviewName === art.name) return;
-        preview.dataset.adbPreviewJob = shot.id;
+        if (preview.dataset.adbPreviewJob === target.id && preview.dataset.adbPreviewName === art.name) return;
+        preview.dataset.adbPreviewJob = target.id;
         preview.dataset.adbPreviewName = art.name;
-        adbFetch(`/jobs/${encodeURIComponent(shot.id)}/artifact/${encodeURIComponent(art.name)}`)
+        adbFetch(`/jobs/${encodeURIComponent(target.id)}/artifact/${encodeURIComponent(art.name)}`)
           .then((res) => res.blob())
           .then((blob) => {
             const url = URL.createObjectURL(blob);
-            const others = (shot.artifacts || [])
+            const others = (target.artifacts || [])
               .map(
                 (a) =>
-                  `<button type="button" class="secondary-btn" data-adb-art-job="${escapeHtml(shot.id)}" data-adb-art-name="${escapeHtml(a.name)}">下载 ${escapeHtml(a.name)}</button>`
+                  `<button type="button" class="secondary-btn" data-adb-art-job="${escapeHtml(target.id)}" data-adb-art-name="${escapeHtml(a.name)}">下载 ${escapeHtml(a.name)}</button>`
               )
               .join("");
-            preview.innerHTML = `<img alt="截图预览" src="${url}" /><div class="adb-job-arts" style="margin-top:0.55rem">${others}<button type="button" class="ghost-btn" data-adb-job-zip="${escapeHtml(shot.id)}">打包下载全部</button></div>`;
+            const foot = `<div class="adb-job-arts" style="margin-top:0.55rem">${others}<button type="button" class="ghost-btn" data-adb-job-zip="${escapeHtml(target.id)}">打包下载全部</button></div>`;
+            preview.innerHTML = isRecord
+              ? `<video class="adb-media-video" controls playsinline preload="metadata" src="${url}"></video>${foot}`
+              : `<img alt="截图预览" src="${url}" />${foot}`;
             preview.hidden = false;
           })
           .catch(() => {});
