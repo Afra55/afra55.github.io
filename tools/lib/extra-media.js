@@ -1027,9 +1027,9 @@
     // 绝不能把变大的文件当作结果返回。
     let best = blob;
     let compressRounds = 0;
+    let noGainStreak = 0;
     for (let round = 1; round <= blackboxMaxRounds(); round++) {
       if (isAborted()) throw new Error("已取消");
-      const before = best.size;
       const plan = buildBlackboxHardCompressArgs(round);
       const out = await compressGifBlob(
         best,
@@ -1038,12 +1038,18 @@
         { round, plan }
       );
       compressRounds = round;
-      if (out && out.size < best.size) {
+      const improved = Boolean(out && out.size < best.size);
+      if (improved) {
         best = out;
+        noGainStreak = 0;
         if (best.size <= MAX) break;
+        continue;
       }
-      // 本轮没有变小 → 更强的参数通常也难再压，停止
-      if (!out || out.size >= before) break;
+      // 没变小：也要先走过「降色数(r2起) / 缩分辨率(r5起)」这些能强制缩小的档，
+      // 纯 lossy 压不动不代表 colors/scale 压不动；连走多档都无收益才真到下限。
+      noGainStreak += 1;
+      if (round >= 5 && noGainStreak >= 2) break;
+      if (noGainStreak >= 4) break;
     }
     return {
       blob: best,
