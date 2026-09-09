@@ -291,6 +291,11 @@
                 } else if (result.ok) {
                   item.note = `${formatKb(before)} → ${formatKb(after)} · 约省 ${saved}% · ${result.compressRounds} 轮`;
                   ok++;
+                } else if (after >= before) {
+                  // 压不动：绝不返回更大的文件，保留原图
+                  item.note = `未能压小 · 已保留原图（${formatKb(after)}，超 6MB）`;
+                  item.error = "未压进 6MB";
+                  fail++;
                 } else {
                   item.note = `仍 ${formatKb(after)}（超 6MB）· 已压 ${result.compressRounds} 轮`;
                   item.error = "未压进 6MB";

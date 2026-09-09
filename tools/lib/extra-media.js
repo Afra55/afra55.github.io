@@ -1021,32 +1021,36 @@
     if (!blob) throw new Error("没有可压缩的 GIF");
     const isAborted = typeof shouldAbort === "function" ? shouldAbort : () => false;
     if (blob.size <= MAX) {
-      return { blob, skipped: true, compressRounds: 0, ok: true };
+      return { blob, skipped: true, compressRounds: 0, ok: true, grew: false };
     }
-    let candidate = blob;
+    // 始终保留「最小」结果：单轮 gifsicle 可能因源调色板/透明/去抖动反而变大，
+    // 绝不能把变大的文件当作结果返回。
+    let best = blob;
     let compressRounds = 0;
     for (let round = 1; round <= blackboxMaxRounds(); round++) {
       if (isAborted()) throw new Error("已取消");
-      const before = candidate.size;
+      const before = best.size;
       const plan = buildBlackboxHardCompressArgs(round);
       const out = await compressGifBlob(
-        candidate,
+        best,
         "standard",
         (ratio, text) => onProgress?.(ratio, text || `第 ${round} 轮`),
         { round, plan }
       );
       compressRounds = round;
-      candidate = out;
-      if (out.size <= MAX) {
-        return { blob: out, skipped: false, compressRounds, ok: true };
+      if (out && out.size < best.size) {
+        best = out;
+        if (best.size <= MAX) break;
       }
-      if (out.size >= before * 0.99) break;
+      // 本轮没有变小 → 更强的参数通常也难再压，停止
+      if (!out || out.size >= before) break;
     }
     return {
-      blob: candidate,
+      blob: best,
       skipped: false,
-      compressRounds,
-      ok: candidate.size <= MAX,
+      compressRounds: best.size < blob.size ? compressRounds : 0,
+      ok: best.size <= MAX,
+      grew: best.size > blob.size,
     };
   }
 
