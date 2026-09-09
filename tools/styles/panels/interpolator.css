@@ -42,6 +42,18 @@
 }
 .interp-param { display: flex; flex-direction: column; gap: 0.2rem; }
 .interp-param input { width: 100%; }
+.interp-param-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5rem;
+  gap: 0.4rem;
+  align-items: center;
+}
+.interp-param .interp-range {
+  min-width: 0;
+}
+.interp-param .interp-number {
+  width: 5rem;
+}
 .interp-desc {
   margin-top: 0.6rem;
   color: var(--muted);

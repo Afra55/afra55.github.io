@@ -250,8 +250,12 @@
       .map((pp) => {
         const val = getParam(l, pp.key);
         return `<label class="interp-param"><span class="hint tight">${escapeHtml(pp.label)}</span>
-          <input class="mono meta-input" type="number" min="${pp.min}" max="${pp.max}" step="${pp.step}"
-            data-lane="${l}" data-key="${pp.key}" value="${val}" />
+          <span class="interp-param-controls">
+            <input class="interp-range" type="range" min="${pp.min}" max="${pp.max}" step="${pp.step}"
+              data-lane="${l}" data-key="${pp.key}" value="${val}" aria-label="${escapeHtml(pp.label)}" />
+            <input class="mono meta-input interp-number" type="number" min="${pp.min}" max="${pp.max}" step="${pp.step}"
+              data-lane="${l}" data-key="${pp.key}" value="${val}" aria-label="${escapeHtml(pp.label)} 数值" />
+          </span>
           <span class="hint tight">${escapeHtml(pp.desc || "")}</span></label>`;
       })
       .join("");
@@ -565,7 +569,15 @@
       if (!inp) return;
       const l = inp.dataset.lane;
       const key = inp.dataset.key;
-      lane(l).params[key] = Number(inp.value);
+      const n = Number(inp.value);
+      lane(l).params[key] = Number.isFinite(n) ? n : getParam(l, key);
+      // 滑杆与数值框双向同步
+      const wrap = inp.closest(".interp-param");
+      if (wrap) {
+        wrap.querySelectorAll("input[data-key]").forEach((o) => {
+          if (o !== inp) o.value = inp.value;
+        });
+      }
       drawCurve();
       resetDots();
       if (activeLane() === l) refreshCode();
