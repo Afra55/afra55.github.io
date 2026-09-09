@@ -222,6 +222,7 @@
         gifbbZipUrl = "";
         if (gifbbFile) gifbbFile.value = "";
         setError(gifbbError, "");
+        setGifbbProgress(false);
         renderGifbbList();
       }
   
@@ -246,6 +247,40 @@
         toast(`已添加 ${files.length} 个 GIF`);
       }
   
+      // 顶部总进度条（与黑盒 GIF(vbb) 同款 gif-progress 样式）
+      function setGifbbProgress(visible, ratio, text, opts = {}) {
+        const box = document.getElementById("gifbb-progress");
+        if (!box) return;
+        box.hidden = !visible;
+        const fill = document.getElementById("gifbb-progress-fill");
+        const pctEl = document.getElementById("gifbb-progress-pct");
+        const textEl = document.getElementById("gifbb-progress-text");
+        const subEl = document.getElementById("gifbb-progress-sub");
+        if (!visible) {
+          if (fill) fill.style.width = "0%";
+          if (pctEl) pctEl.hidden = true;
+          if (subEl) { subEl.hidden = true; }
+          return;
+        }
+        const pct = Math.max(0, Math.min(100, Math.round((ratio || 0) * 100)));
+        const busy = Boolean(opts.busy) || (pct > 0 && pct < 100);
+        if (fill) {
+          fill.style.width = `${Math.max(pct, busy && pct < 8 ? 8 : pct)}%`;
+          fill.classList.toggle("is-active", busy);
+          fill.classList.toggle("is-busy", Boolean(opts.busy));
+        }
+        if (pctEl) { pctEl.textContent = `${pct}%`; pctEl.hidden = false; }
+        if (textEl) textEl.textContent = String(text || "");
+        if (subEl) {
+          if (opts.sub) {
+            subEl.textContent = String(opts.sub);
+            subEl.hidden = false;
+          } else {
+            subEl.hidden = true;
+          }
+        }
+      }
+
       async function runGifbbCompress() {
         if (!gifbbItems.length || gifbbBusy) return;
         gifbbBusy = true;
@@ -255,8 +290,10 @@
         let ok = 0;
         let skip = 0;
         let fail = 0;
+        const total = gifbbItems.length;
+        setGifbbProgress(true, 0, `压缩 0/${total}`, { busy: true });
         try {
-          for (let i = 0; i < gifbbItems.length; i++) {
+          for (let i = 0; i < total; i++) {
             if (abortGifbb) throw new Error("已取消");
             const item = gifbbItems[i];
             item.status = "working";
@@ -278,6 +315,8 @@
                 const result = await compressExistingGifToBlackbox(item.file, (ratio, text) => {
                   item.jobProgress = Math.max(0, Math.min(1, Number(ratio) || 0));
                   item.jobText = text || "压缩中…";
+                  const overall = (i + (item.jobProgress || 0)) / total;
+                  setGifbbProgress(true, overall, `压缩 ${i + 1}/${total}`, { sub: item.jobText, busy: true });
                   renderGifbbList();
                 }, () => abortGifbb);
                 item.outBlob = result.blob;
@@ -308,6 +347,7 @@
               fail++;
             }
             item.status = item.status === "working" ? "done" : item.status;
+            setGifbbProgress(true, (i + 1) / total, `压缩 ${Math.min(i + 1, total)}/${total}`, { busy: i + 1 < total });
             renderGifbbList();
           }
           if (abortGifbb) toast("已取消");
@@ -319,6 +359,7 @@
         } finally {
           gifbbBusy = false;
           abortGifbb = false;
+          setGifbbProgress(false);
           setGifbbButtons();
         }
       }

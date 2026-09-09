@@ -19,6 +19,14 @@
           </label>
         </div>
         <p class="hint" id="gifbb-meta">未选择 GIF</p>
+        <div class="gif-progress" id="gifbb-progress" hidden>
+          <div class="gif-progress-head">
+            <p class="hint gif-progress-title" id="gifbb-progress-text">准备中…</p>
+            <span class="mono gif-progress-pct" id="gifbb-progress-pct">0%</span>
+          </div>
+          <div class="gif-progress-track" aria-hidden="true"><span class="gif-progress-fill" id="gifbb-progress-fill"></span></div>
+          <p class="hint tight gif-progress-sub" id="gifbb-progress-sub" hidden></p>
+        </div>
         <div class="gif-frame-list" id="gifbb-list" hidden aria-live="polite"></div>
         <p class="error" id="gifbb-error" hidden></p>
       </div>
