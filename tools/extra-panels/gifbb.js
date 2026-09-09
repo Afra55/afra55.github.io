@@ -42,6 +42,28 @@
         const name = String(file?.name || "clip.gif");
         return name.replace(/\.gif$/i, "").replace(/[^\w\u4e00-\u9fff.-]+/g, "_") || "clip";
       }
+
+      async function readGifDim(file) {
+        try {
+          const buf = await file.slice(0, 10).arrayBuffer();
+          const d = new DataView(buf);
+          if (d.byteLength < 10) return null;
+          const w = d.getUint16(6, true);
+          const h = d.getUint16(8, true);
+          return w > 0 && h > 0 ? { w, h } : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function gifbbMetaText(item) {
+        const bits = [];
+        if (item.dim) bits.push(`${item.dim.w}×${item.dim.h}`);
+        bits.push(formatKb(item.file.size));
+        if (item.note) bits.push(item.note);
+        if (item.error) bits.push(item.error);
+        return bits.join(" · ");
+      }
   
       function gifbbOutName(item) {
         const base = gifbbBaseName(item.file);
@@ -135,10 +157,7 @@
           title.textContent = item.file.name;
           const meta = document.createElement("span");
           meta.className = "hint tight";
-          const bits = [formatKb(item.file.size)];
-          if (item.note) bits.push(item.note);
-          if (item.error) bits.push(item.error);
-          meta.textContent = bits.join(" · ");
+          meta.textContent = gifbbMetaText(item);
           const actions = document.createElement("div");
           actions.className = "btn-row";
           if (item.outBlob) {
@@ -150,17 +169,6 @@
               triggerLocalDownload(item.outBlob, gifbbOutName(item));
             });
             actions.appendChild(dlBtn);
-            const previewBtn = document.createElement("button");
-            previewBtn.type = "button";
-            previewBtn.className = "ghost-btn";
-            previewBtn.textContent = item.previewIdx ? "收起预览" : "预览";
-            previewBtn.addEventListener("click", () => {
-              gifbbItems.forEach((it, i) => {
-                it.previewIdx = i === idx ? !it.previewIdx : false;
-              });
-              renderGifbbList();
-            });
-            actions.appendChild(previewBtn);
           }
           top.append(title, meta, actions);
           row.appendChild(top);
@@ -173,7 +181,8 @@
               jobText: item.jobText || "处理中…",
             });
           }
-          if (item.outBlob && item.previewIdx) {
+          // 与黑盒 GIF(vbb) 结果卡片一致：成功后默认展示缩略图
+          if (item.outBlob) {
             const url = URL.createObjectURL(item.outBlob);
             gifbbPreviewUrls.push(url);
             const img = document.createElement("img");
@@ -185,6 +194,17 @@
             row.appendChild(img);
           }
           gifbbList.appendChild(row);
+          if (item.outBlob && !item.dim) {
+            readGifDim(item.outBlob)
+              .then((d) => {
+                if (d) {
+                  item.dim = d;
+                  const m = row.querySelector(".hint.tight");
+                  if (m) m.textContent = gifbbMetaText(item);
+                }
+              })
+              .catch(() => {});
+          }
         });
         setGifbbButtons();
       }
